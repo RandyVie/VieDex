@@ -1,5 +1,4 @@
 import { displayTitle, embedCode, firstUrl, hrefOf, linkNote, parseBody, type BlockType, type Segment } from '../md/blocks';
-import { languageLabel } from '../md/detect-lang';
 import { findUrls, urlKey } from '../md/linkify';
 import { plainText } from '../library/search';
 import { renderMarkdown } from '../md/render';
@@ -119,8 +118,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
   const site = url && !b.title.trim() ? displayTitle(b) : null;
   const title = displayTitle(b);
   const showTitle = !!b.title.trim() || !!site || !!opts.compact;
-  // The language written after the ``` of a code block, shown on its card.
-  const codeLang = b.type === 'code' ? (/^\s*```([\w+#.-]+)/.exec(b.content)?.[1] ?? null) : null;
+
 
   const head = h(
     'header',
@@ -132,7 +130,6 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
         ? h('a', { class: `block-title${site ? ' is-site' : ''}`, href }, title)
         : h('span', { class: `block-title${site ? ' is-site' : ''}` }, title)
       : h('span', { class: 'block-title' }),
-    codeLang && h('span', { class: 'block-lang' }, languageLabel(codeLang)),
     opts.fromFileId && h('span', { class: 'block-from' }, 'from ', placeLink(opts.fromFileId)),
     !opts.fromFileId && !opts.usage && uses.length > 0 && h('a', { class: 'block-uses', href: href!, title: 'Documents that embed this block' }, `used in ${uses.length}`),
     b.id && !b.id.startsWith('~') && copyEmbed(b.id, b),

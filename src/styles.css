@@ -3169,12 +3169,28 @@ a.block-title:hover {
   color: var(--b-code);
 }
 
-.block-lang {
-  font: 11px var(--mono);
-  color: var(--text-3);
-  padding: 1px 6px;
-  border: 1px solid var(--line-strong);
+.code-box {
+  position: relative;
+}
+
+/* The language of a code box, in its top right corner. */
+.code-lang {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 7px;
   border-radius: 4px;
+  background: color-mix(in srgb, var(--b-code) 14%, var(--bg-raised));
+  color: var(--b-code);
+  font: 600 10px/16px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  user-select: none;
+}
+
+.code-box pre {
+  padding-right: 90px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

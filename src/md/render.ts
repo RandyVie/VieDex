@@ -1,5 +1,6 @@
 import { Marked, type Tokens } from 'marked';
 import { cleanUrl, hrefOf, LINK_SOURCE } from './blocks';
+import { languageLabel } from './detect-lang';
 import { sanitize } from './sanitize';
 
 // Kept in sync with the wikilink tokenizer below: [[Target]] or [[Target|label]].
@@ -80,6 +81,22 @@ function linkBareUrls(root: HTMLElement) {
   }
 }
 
+/** A small language label in the top right corner of each code box (```css and so on). */
+function labelCode(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('pre > code[class*="language-"]').forEach((code) => {
+    const lang = /language-([\w+#.-]+)/.exec(code.className)?.[1];
+    const pre = code.parentElement!;
+    if (!lang) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'code-box';
+    const label = document.createElement('span');
+    label.className = 'code-lang';
+    label.textContent = languageLabel(lang);
+    pre.replaceWith(wrap);
+    wrap.append(pre, label);
+  });
+}
+
 export function renderMarkdown(body: string, opts: RenderOptions): HTMLElement {
   const root = document.createElement('div');
   root.className = 'prose';
@@ -101,6 +118,7 @@ export function renderMarkdown(body: string, opts: RenderOptions): HTMLElement {
     }
   });
   linkBareUrls(root);
+  labelCode(root);
   root.querySelectorAll<HTMLAnchorElement>('a[href^="http"], a[href^="mailto"]').forEach((a) => {
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
