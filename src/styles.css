@@ -3173,11 +3173,17 @@ a.block-title:hover {
   position: relative;
 }
 
-/* The language of a code box, in its top right corner. */
-.code-lang {
+/* The top right corner of a code box: copy button (on hover) and language. */
+.code-corner {
   position: absolute;
   top: 8px;
   right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.code-lang {
   padding: 2px 7px;
   border-radius: 4px;
   background: color-mix(in srgb, var(--b-code) 14%, var(--bg-raised));
@@ -3185,12 +3191,38 @@ a.block-title:hover {
   font: 600 10px/16px var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  pointer-events: none;
   user-select: none;
 }
 
+.code-copy-btn {
+  padding: 2px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--bg-raised);
+  color: var(--text-2);
+  font: 11px/16px var(--sans);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.code-box:hover .code-copy-btn,
+.code-copy-btn:focus-visible {
+  opacity: 1;
+}
+
+.code-copy-btn:hover {
+  color: var(--text);
+}
+
+@media (hover: none) {
+  .code-copy-btn {
+    opacity: 1;
+  }
+}
+
 .code-box pre {
-  padding-right: 90px;
+  padding-right: 140px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

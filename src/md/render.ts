@@ -81,19 +81,33 @@ function linkBareUrls(root: HTMLElement) {
   }
 }
 
-/** A small language label in the top right corner of each code box (```css and so on). */
+/** Each code box gets a copy button and, when it has one, its language in the top right corner. */
 function labelCode(root: HTMLElement) {
-  root.querySelectorAll<HTMLElement>('pre > code[class*="language-"]').forEach((code) => {
+  root.querySelectorAll<HTMLElement>('pre > code').forEach((code) => {
     const lang = /language-([\w+#.-]+)/.exec(code.className)?.[1];
     const pre = code.parentElement!;
-    if (!lang) return;
     const wrap = document.createElement('div');
     wrap.className = 'code-box';
-    const label = document.createElement('span');
-    label.className = 'code-lang';
-    label.textContent = languageLabel(lang);
+    const corner = document.createElement('div');
+    corner.className = 'code-corner';
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'code-copy-btn';
+    copy.textContent = 'Copy';
+    copy.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(code.textContent ?? '');
+      copy.textContent = 'Copied';
+      setTimeout(() => (copy.textContent = 'Copy'), 1500);
+    });
+    corner.append(copy);
+    if (lang) {
+      const label = document.createElement('span');
+      label.className = 'code-lang';
+      label.textContent = languageLabel(lang);
+      corner.append(label);
+    }
     pre.replaceWith(wrap);
-    wrap.append(pre, label);
+    wrap.append(pre, corner);
   });
 }
 

@@ -1,4 +1,4 @@
-import { displayTitle, embedCode, firstUrl, hrefOf, linkNote, parseBody, type BlockType, type Segment } from '../md/blocks';
+import { displayTitle, firstUrl, hrefOf, linkNote, parseBody, type BlockType, type Segment } from '../md/blocks';
 import { findUrls, urlKey } from '../md/linkify';
 import { plainText } from '../library/search';
 import { renderMarkdown } from '../md/render';
@@ -100,12 +100,22 @@ function deleteButton(id: string) {
   return b;
 }
 
-function copyEmbed(id: string, b0: CardBlock) {
-  const b = h('button', { class: 'icon-btn block-copy', title: 'Copy embed code, to paste into a file in Drive', 'aria-label': 'Copy embed code' }, icon('copy'));
+/** What copying a block gives you: the code without fences, a link's URL, or the text. */
+function copyText(b: CardBlock): string {
+  if (b.type === 'code') {
+    const m = /^\s*```[^\n]*\n([\s\S]*?)\n?```\s*$/.exec(b.content);
+    return m ? m[1] : b.content;
+  }
+  if (b.type === 'link') return firstUrl(b.content) ?? b.content;
+  return b.content;
+}
+
+function copyButton(b0: CardBlock) {
+  const b = h('button', { class: 'icon-btn block-copy', title: b0.type === 'code' ? 'Copy code' : b0.type === 'link' ? 'Copy link' : 'Copy text', 'aria-label': 'Copy content' }, icon('copy'));
   b.addEventListener('click', async (e) => {
     e.preventDefault();
-    await navigator.clipboard.writeText(embedCode(id, b0));
-    toast('Embed code copied');
+    await navigator.clipboard.writeText(copyText(b0));
+    toast(b0.type === 'code' ? 'Code copied' : b0.type === 'link' ? 'Link copied' : 'Copied');
   });
   return b;
 }
@@ -132,7 +142,8 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
       : h('span', { class: 'block-title' }),
     opts.fromFileId && h('span', { class: 'block-from' }, 'from ', placeLink(opts.fromFileId)),
     !opts.fromFileId && !opts.usage && uses.length > 0 && h('a', { class: 'block-uses', href: href!, title: 'Documents that embed this block' }, `used in ${uses.length}`),
-    b.id && !b.id.startsWith('~') && copyEmbed(b.id, b),
+    // Code has its own copy button on the code box itself.
+    b.type !== 'image' && b.type !== 'code' && b.content.trim() && copyButton(b),
     opts.usage && b.id && !b.id.startsWith('~') && deleteButton(b.id),
   );
 
