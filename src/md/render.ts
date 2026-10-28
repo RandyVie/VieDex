@@ -1,4 +1,5 @@
 import { Marked, type Tokens } from 'marked';
+import { cleanUrl, hrefOf, LINK_SOURCE } from './blocks';
 import { sanitize } from './sanitize';
 
 // Kept in sync with the wikilink tokenizer below: [[Target]] or [[Target|label]].
@@ -47,6 +48,38 @@ export interface RenderOptions {
   onMissing: (title: string) => void;
 }
 
+/**
+ * Make links Markdown leaves as plain text clickable, like `coolors.co` or `studio.be/work`.
+ * Only the shown page changes, never the file. Code and existing links are left alone.
+ */
+function linkBareUrls(root: HTMLElement) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) => (n.parentElement?.closest('a, code, pre') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+  });
+  const nodes: Text[] = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+  for (const node of nodes) {
+    const text = node.textContent ?? '';
+    const re = new RegExp(LINK_SOURCE, 'gi');
+    let last = 0;
+    const parts: Node[] = [];
+    for (const m of text.matchAll(re)) {
+      const url = cleanUrl(m[0]);
+      if (!/\.[a-z]{2,}/i.test(url)) continue;
+      const at = m.index!;
+      parts.push(document.createTextNode(text.slice(last, at)));
+      const a = document.createElement('a');
+      a.href = hrefOf(url);
+      a.textContent = url;
+      parts.push(a);
+      last = at + url.length;
+    }
+    if (!parts.length) continue;
+    parts.push(document.createTextNode(text.slice(last)));
+    node.replaceWith(...parts);
+  }
+}
+
 export function renderMarkdown(body: string, opts: RenderOptions): HTMLElement {
   const root = document.createElement('div');
   root.className = 'prose';
@@ -57,7 +90,7 @@ export function renderMarkdown(body: string, opts: RenderOptions): HTMLElement {
     const id = opts.resolve(target);
     a.classList.add('wikilink');
     if (id) {
-      a.href = `#/item/${id}`;
+      a.href = `#/doc/${id}`;
     } else {
       a.classList.add('is-broken');
       a.title = 'No item with this title yet. Click to create it.';
@@ -67,6 +100,7 @@ export function renderMarkdown(body: string, opts: RenderOptions): HTMLElement {
       });
     }
   });
+  linkBareUrls(root);
   root.querySelectorAll<HTMLAnchorElement>('a[href^="http"], a[href^="mailto"]').forEach((a) => {
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
