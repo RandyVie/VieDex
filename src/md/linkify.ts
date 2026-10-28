@@ -1,19 +1,14 @@
 // Finds web links in normal text and adds a link block after each paragraph that has one.
 // The sentence keeps its link; code, blocks, embeds and frontmatter are never touched.
-import { blockMarkup, embedCode, firstUrl, hrefOf, newBlockId, parseBody, type ParsedBlock } from './blocks';
+import { blockMarkup, cleanUrl, embedCode, firstUrl, hrefOf, LINK_SOURCE, newBlockId, parseBody, type ParsedBlock } from './blocks';
 
-const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"'`[\]]+/gi;
+export { cleanUrl };
+
+const URL_RE = new RegExp(LINK_SOURCE, 'gi');
 const FENCE_RE = /^[ \t]*(```|~~~)/;
 const OPEN_RE = /^:::(idea|list|link|code|image|reference)\b/i;
 const CLOSE_RE = /^:::[ \t]*$/;
 const EMBED_RE = /^[ \t]*!\[\[[^\]\n]+\]\][ \t]*$/;
-
-/** Drop punctuation that ends a sentence rather than the link, and a closing ) without its (. */
-export function cleanUrl(raw: string): string {
-  let u = raw.replace(/[.,;:!?'"*_]+$/, '');
-  while (u.endsWith(')') && (u.match(/\(/g)?.length ?? 0) < (u.match(/\)/g)?.length ?? 0)) u = u.slice(0, -1).replace(/[.,;:!?]+$/, '');
-  return u;
-}
 
 /** Compare links loosely: no scheme, no www, no trailing slash, case-insensitive host. */
 export function urlKey(url: string): string {
@@ -27,7 +22,8 @@ export function urlKey(url: string): string {
 
 /** Links in one line of normal text, ignoring inline code and images. */
 export function findUrls(line: string): string[] {
-  const text = line.replace(/`[^`]*`/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ');
+  // Inline code, images and wikilink titles are not links, even when they look like one.
+  const text = line.replace(/`[^`]*`/g, ' ').replace(/!\[[^\]]*\]\([^)]*\)/g, ' ').replace(/\[\[[^\]]*\]\]/g, ' ');
   return [...text.matchAll(URL_RE)].map((m) => cleanUrl(m[0])).filter((u) => /\.[a-z]{2,}/i.test(u));
 }
 

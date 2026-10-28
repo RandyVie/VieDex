@@ -124,13 +124,38 @@ export function displayTitle(b: Pick<ParsedBlock, 'title' | 'content' | 'type'>)
   return `Untitled ${b.type}`;
 }
 
-/** The first link in a block's content, exactly as written (with or without http). */
-export function firstUrl(content: string): string | null {
-  return /(?:https?:\/\/|www\.)[^\s<>)\]]+/i.exec(content)?.[0] ?? null;
+// --- Links -------------------------------------------------------------------
+
+/**
+ * Extensions a bare domain (no http, no www.) must end in to count as a link.
+ * Short ones that are also common words (it, at, no, me, us) are left out on purpose.
+ */
+export const LINK_EXTENSIONS = [
+  'co.uk', 'org.uk', 'com.au',
+  'com', 'net', 'org', 'io', 'co', 'dev', 'app', 'design', 'studio', 'info', 'eu',
+  'be', 'nl', 'de', 'fr', 'ch', 'lu', 'uk', 'es', 'pt', 'dk', 'se', 'fi', 'pl', 'ie', 'ca',
+];
+
+const PATH = `[^\\s<>"'\`[\\]]*`;
+const BARE = `(?<![@\\w./-])(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:${LINK_EXTENSIONS.map((e) => e.replace('.', '\\.')).join('|')})(?![a-z0-9-])(?:[/?#]${PATH})?`;
+/** http(s) and www. links, or a bare domain with a known extension. */
+export const LINK_SOURCE = `\\b(?:https?:\\/\\/|www\\.)[^\\s<>"'\`[\\]]+|${BARE}`;
+
+/** Drop punctuation that ends a sentence rather than the link, and a closing ) without its (. */
+export function cleanUrl(raw: string): string {
+  let u = raw.replace(/[.,;:!?'"*_]+$/, '');
+  while (u.endsWith(')') && (u.match(/\(/g)?.length ?? 0) < (u.match(/\)/g)?.length ?? 0)) u = u.slice(0, -1).replace(/[.,;:!?]+$/, '');
+  return u;
 }
 
-/** Where a link goes when clicked. The text itself is never changed: `www.` only gets a scheme here. */
-export const hrefOf = (url: string) => (/^www\./i.test(url) ? `https://${url}` : url);
+/** The first link in a block's content, exactly as written. */
+export function firstUrl(content: string): string | null {
+  const m = new RegExp(LINK_SOURCE, 'i').exec(content);
+  return m ? cleanUrl(m[0]) : null;
+}
+
+/** Where a link goes when clicked. The text itself is never changed: only the click target gets a scheme. */
+export const hrefOf = (url: string) => (/^[a-z][a-z0-9+.-]*:/i.test(url) ? url : `https://${url}`);
 
 /** A link block's note: its content without the line that is only the link. */
 export function linkNote(content: string, url: string | null): string {

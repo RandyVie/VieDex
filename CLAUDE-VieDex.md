@@ -112,7 +112,8 @@ Caption for the image.
 
 ### Links in text
 
-- Anything in normal text starting with `http://`, `https://` or `www.` is a link. Code, blocks, embeds and frontmatter are not scanned.
+- Anything in normal text starting with `http://`, `https://` or `www.` is a link. So is a bare domain ending in a known extension (`something.com`, `studio.be/work`, `bbc.co.uk`); the list is `LINK_EXTENSIONS` in `src/md/blocks.ts`. Extensions that are common words (`.it`, `.at`, `.no`, `.me`, `.us`) are left out, and email addresses are skipped. Code, blocks, embeds, wikilink titles and frontmatter are not scanned.
+- Links are stored exactly as written. Only the click target gets `https://` when a link has no scheme.
 - **On save in the app**, each paragraph with links gets a link block right after it. The sentence keeps its link.
 - **One block per URL.** If a link block with that URL already exists anywhere in the library, the document embeds it instead of creating a new one. URLs compare without scheme, `www.` or trailing slash.
 - Converting is repeatable: a link the document already has as a block (its own or embedded) is skipped.

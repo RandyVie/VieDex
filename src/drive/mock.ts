@@ -96,7 +96,7 @@ Open questions live in [[Rebrand questions]].
 title: Moodboard
 tags: [rebrand, inspiration]
 ---
-First pass at a visual direction.
+First pass at a visual direction. Colors picked with coolors.co, type from fonts.google.com.
 
 :::image ^mb0p1 Poster grid
 ![[Grid poster.svg]]
