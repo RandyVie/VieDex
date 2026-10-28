@@ -1,6 +1,6 @@
 {
-  "name": "KB",
-  "short_name": "KB",
+  "name": "VieDex",
+  "short_name": "VieDex",
   "description": "Personal knowledge base on Google Drive.",
   "start_url": "./",
   "scope": "./",

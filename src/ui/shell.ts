@@ -212,7 +212,7 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       ui.query = search.value.trim();
-      if (route.name === 'search') window.dispatchEvent(new Event('kb:query'));
+      if (route.name === 'search') window.dispatchEvent(new Event('viedex:query'));
       else location.hash = '#/search';
     }, 120);
   });
@@ -220,7 +220,7 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     if (e.key === 'Escape') {
       search.value = '';
       ui.query = '';
-      window.dispatchEvent(new Event('kb:query'));
+      window.dispatchEvent(new Event('viedex:query'));
       search.blur();
     }
     if (e.key === 'Enter') host_.querySelector<HTMLAnchorElement>('.row')?.focus();

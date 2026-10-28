@@ -8,8 +8,8 @@ import { errorText, toast } from './ui/feedback';
 import { mountShell, type LibraryRef } from './ui/shell';
 import { pickRootView, signInView } from './ui/views/setup';
 
-const LIBS_KEY = 'kb.libraries';
-const CURRENT_KEY = 'kb.current';
+const LIBS_KEY = 'viedex.libraries';
+const CURRENT_KEY = 'viedex.current';
 const app = document.getElementById('app')!;
 let unmount: (() => void) | null = null;
 

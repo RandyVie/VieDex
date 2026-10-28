@@ -291,6 +291,6 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
       return 'removed, now press Refresh';
     },
   };
-  (window as unknown as { kbMock: typeof sim }).kbMock = sim;
+  (window as unknown as { viedexMock: typeof sim }).viedexMock = sim;
   return api;
 }

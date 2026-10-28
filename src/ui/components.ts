@@ -39,7 +39,7 @@ export function setQuery(q: string) {
   ui.query = q;
   const input = document.querySelector<HTMLInputElement>('#search');
   if (input) input.value = q;
-  if (location.hash === '#/search') window.dispatchEvent(new Event('kb:query'));
+  if (location.hash === '#/search') window.dispatchEvent(new Event('viedex:query'));
   else location.hash = '#/search';
 }
 

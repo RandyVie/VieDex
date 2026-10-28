@@ -1,5 +1,5 @@
 // App shell cache. Drive data is never cached here: Drive stays authoritative.
-const CACHE = 'kb-shell-v1';
+const CACHE = 'viedex-shell-v1';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon.svg'];
 
 self.addEventListener('install', (event) => {

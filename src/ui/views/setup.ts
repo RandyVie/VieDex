@@ -5,7 +5,7 @@ import { clear, h, icon } from '../dom';
 import { errorText, toast } from '../feedback';
 import { loading } from '../components';
 
-const brand = () => h('div', { class: 'setup-brand' }, h('img', { src: './icons/icon.svg', alt: '', width: 40, height: 40 }), h('span', null, 'KB'));
+const brand = () => h('div', { class: 'setup-brand' }, h('img', { src: './icons/icon.svg', alt: '', width: 40, height: 40 }), h('span', null, 'VieDex'));
 
 export function signInView(): HTMLElement {
   if (!config.clientId && !config.demo) {
@@ -36,8 +36,8 @@ export function signInView(): HTMLElement {
     'main',
     { class: 'setup' },
     brand(),
-    h('h1', null, 'Your notes, images and clips, kept in Google Drive.'),
-    h('p', null, 'KB reads and writes one folder in your Drive. Edit there or here, both stay in sync.'),
+    h('h1', null, 'Your books, documents and ideas, kept in Google Drive.'),
+    h('p', null, 'Each library is a folder in your Drive. Edit there or here, both stay in sync.'),
     button,
     note,
   );
@@ -123,7 +123,7 @@ export function pickRootView(onPick: (folder: { id: string; name: string }) => v
     { class: embedded ? 'setup setup-wide setup-embedded' : 'setup setup-wide' },
     !embedded && brand(),
     h('h1', null, embedded ? 'Add a library' : 'Choose a folder for your first library'),
-    h('p', null, 'A library is one Drive folder. Its top-level folders become books. KB never reads or writes outside the library you have open.'),
+    h('p', null, 'A library is one Drive folder. Its top-level folders become books. VieDex never reads or writes outside the library you have open.'),
     h('div', { class: 'picker' }, crumbs, list, h('div', { class: 'picker-actions' }, h('div', { class: 'inline' }, newName, create), useBtn)),
     h('div', { class: 'inline' }, pasted, openPasted),
   );

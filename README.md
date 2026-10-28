@@ -1,4 +1,4 @@
-# KB
+# VieDex
 
 Personal knowledge base. Google Drive is the database, this app is a window onto it.
 See `CLAUDE-VieDex.md` for the full brief and constraints.
@@ -15,17 +15,17 @@ npm run build    # typecheck + production build into dist/
 In demo mode, open the console to simulate edits made directly in Drive, then press Refresh:
 
 ```js
-kbMock.editExternally('Welcome.md', 'Changed in Drive')
-kbMock.addNote('notes', 'From Drive.md', '# Hello')
-kbMock.remove('shopping-list.md')
+viedexMock.editExternally('Pairing fonts.md', 'Changed in Drive')
+viedexMock.addNote('Typography', 'From Drive.md', '# Hello')
+viedexMock.remove('Inbox.md')
 ```
 
 ## Google setup (one time, free)
 
-1. Go to <https://console.cloud.google.com/> and create a project, e.g. "KB".
+1. Go to <https://console.cloud.google.com/> and create a project, e.g. "VieDex".
 2. **APIs & Services > Library**: enable **Google Drive API**.
 3. **APIs & Services > OAuth consent screen** (Google Auth Platform):
-   - User type **External**, app name "KB", your email as support and developer contact.
+   - User type **External**, app name "VieDex", your email as support and developer contact.
    - Data access / scopes: add `https://www.googleapis.com/auth/drive`.
    - Audience: leave publishing status on **Testing** and add your own Google account as a **test user**.
 4. **Clients > Create client**: type **Web application**.

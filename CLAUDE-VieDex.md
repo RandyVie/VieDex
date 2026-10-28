@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Personal knowledge base web app. Google Drive is the database, the app is a window onto it.
-Working name: **KB** (final name TBD).
+Name: **VieDex**.
 
 ## What this is
 
@@ -176,4 +176,3 @@ Not in MVP. Kept here so they don't get lost.
 - [ ] **Import from Evernote** (.enex) into Markdown + images.
 - [ ] **Quick capture** on phone: one tap to new note, photo or URL.
 - [ ] **Keyboard shortcuts** for search, new note, jump to item.
-- [ ] **Final name** for the app.

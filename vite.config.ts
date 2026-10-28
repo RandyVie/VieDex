@@ -18,7 +18,7 @@ const CSP = [
 
 function csp(): Plugin {
   return {
-    name: 'kb-csp',
+    name: 'viedex-csp',
     apply: 'build',
     transformIndexHtml: (html) =>
       html.replace('<!--CSP-->', `<meta http-equiv="Content-Security-Policy" content="${CSP}">`),

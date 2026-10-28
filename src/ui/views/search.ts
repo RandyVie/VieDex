@@ -23,6 +23,6 @@ export function searchView(): View {
     );
   };
   render();
-  window.addEventListener('kb:query', render);
-  return { el, live: true, dispose: () => window.removeEventListener('kb:query', render) };
+  window.addEventListener('viedex:query', render);
+  return { el, live: true, dispose: () => window.removeEventListener('viedex:query', render) };
 }

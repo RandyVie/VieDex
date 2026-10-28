@@ -34,7 +34,7 @@ export function settingsView(host: ShellHost): View {
         action(
           'Remove',
           async () => {
-            if (await confirmDialog(`Remove "${lib.name}" from KB? The folder and its files stay in Drive.`, 'Remove', true)) host.removeLibrary(lib.id);
+            if (await confirmDialog(`Remove "${lib.name}" from VieDex? The folder and its files stay in Drive.`, 'Remove', true)) host.removeLibrary(lib.id);
           },
           'btn btn-small',
         ),
@@ -67,7 +67,7 @@ export function settingsView(host: ShellHost): View {
         'div',
         { class: 'inline' },
         action('Sign out', async () => {
-          if (await confirmDialog('Sign out of KB on this device?', 'Sign out')) host.signOut();
+          if (await confirmDialog('Sign out of VieDex on this device?', 'Sign out')) host.signOut();
         }),
       ),
     ),

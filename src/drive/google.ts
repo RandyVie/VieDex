@@ -58,7 +58,7 @@ export const googleDrive: DriveBackend = {
   },
 
   async createText(parentId, name, text, mimeType) {
-    const boundary = `kb${crypto.randomUUID()}`;
+    const boundary = `viedex${crypto.randomUUID()}`;
     const meta = JSON.stringify({ name, mimeType, parents: [safeId(parentId)] });
     const body =
       `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n` +
@@ -72,7 +72,7 @@ export const googleDrive: DriveBackend = {
   },
 
   async createBlob(parentId, name, blob) {
-    const boundary = `kb${crypto.randomUUID()}`;
+    const boundary = `viedex${crypto.randomUUID()}`;
     const meta = JSON.stringify({ name, parents: [safeId(parentId)] });
     const type = blob.type || 'application/octet-stream';
     const body = new Blob([

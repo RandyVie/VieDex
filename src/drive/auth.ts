@@ -1,7 +1,7 @@
 import { config } from '../config';
 
 const GIS_SRC = 'https://accounts.google.com/gsi/client';
-const SESSION_KEY = 'kb.session';
+const SESSION_KEY = 'viedex.session';
 // Renew a minute early so a request never starts with a token about to expire.
 const EARLY_MS = 60_000;
 
