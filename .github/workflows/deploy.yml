@@ -1,8 +1,10 @@
 name: Deploy to GitHub Pages
 
+# Manual only for now: run it from the Actions tab once the app is ready to publish.
+# To deploy on every push again, add:
+#   push:
+#     branches: [main]
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

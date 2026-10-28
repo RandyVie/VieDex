@@ -42,10 +42,12 @@ Testing-mode consent lasts 7 days, after which Google asks you to sign in again.
 
 ## Deploy to GitHub Pages
 
-1. Push to a GitHub repo on `main`.
-2. **Settings > Pages**: source **GitHub Actions**.
-3. **Settings > Secrets and variables > Actions > Variables**: add `GOOGLE_CLIENT_ID`.
-4. Add the Pages origin to the OAuth client's authorized origins (step 4 above).
+Deploys are manual for now (the workflow does not run on push).
+
+1. **Settings > Pages**: source **GitHub Actions**.
+2. **Settings > Secrets and variables > Actions > Variables**: add `GOOGLE_CLIENT_ID`.
+3. Add the Pages origin to the OAuth client's authorized origins (step 4 above).
+4. **Actions > Deploy to GitHub Pages > Run workflow**.
 
 ## How it fits together
 
