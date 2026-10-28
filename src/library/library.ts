@@ -121,8 +121,8 @@ export async function openLibrary(rootId: string): Promise<void> {
     setStatus('syncing', 'Opening library');
     await ensureSystem(rootId);
     const [savedIndex, savedState] = await Promise.all([readJson<KbIndex>(sys.indexId), readJson<KbState>(sys.stateId)]);
-    state = savedState?.version === 2 && savedState.rootId === rootId ? savedState : { version: 2, rootId, pageToken: null, lastSync: null };
-    if (savedIndex?.version === 2 && savedIndex.rootId === rootId) {
+    state = savedState?.version === 3 && savedState.rootId === rootId ? savedState : { version: 3, rootId, pageToken: null, lastSync: null };
+    if (savedIndex?.version === 3 && savedIndex.rootId === rootId) {
       index = savedIndex;
       derive(index);
       registerGuard();
@@ -145,6 +145,13 @@ export const rebuild = () => exclusive(async () => {
   setStatus('idle');
 });
 
+export const COLOR_PROPERTY = 'viedexColor';
+
+function folderEntry(f: DriveFile, parent: string): Folder {
+  const color = f.properties?.[COLOR_PROPERTY];
+  return { id: f.id, name: f.name, parent, ...(color && /^#[0-9a-f]{6}$/i.test(color) ? { color } : {}) };
+}
+
 /** Walk a folder tree, recording folders and collecting files. */
 async function walk(startId: string, folders: Record<string, Folder>): Promise<DriveFile[]> {
   const files: DriveFile[] = [];
@@ -155,7 +162,7 @@ async function walk(startId: string, folders: Record<string, Folder>): Promise<D
       for (const c of await drive.listChildren(folderId)) {
         if (isFolder(c)) {
           if (c.id === sys.folderId) continue;
-          folders[c.id] = { id: c.id, name: c.name, parent: folderId };
+          folders[c.id] = folderEntry(c, folderId);
           guard.addFolder(c.id);
           next.push(c.id);
         } else {
@@ -177,7 +184,7 @@ async function rebuildIndex(rootId: string) {
   const prev = index;
   const folders: Record<string, Folder> = {};
   const files = await walk(rootId, folders);
-  const next: KbIndex = { version: 2, rootId, builtAt: new Date().toISOString(), folders, files: {} };
+  const next: KbIndex = { version: 3, rootId, builtAt: new Date().toISOString(), folders, files: {} };
   const c: IndexContext = { rootId, folders };
 
   let done = 0;
@@ -192,7 +199,7 @@ async function rebuildIndex(rootId: string) {
   if (mine !== generation) return;
   derive(next);
   index = next;
-  state = { version: 2, rootId, pageToken: token, lastSync: new Date().toISOString() };
+  state = { version: 3, rootId, pageToken: token, lastSync: new Date().toISOString() };
   registerGuard();
   await persist(true);
   emit();
@@ -260,7 +267,7 @@ async function syncChanges() {
   for (const f of changed.filter(isFolder)) {
     if (f.id === sys.folderId || f.id === idx.rootId) continue;
     if (!idx.folders[f.id]) newFolders.push(f.id);
-    idx.folders[f.id] = { id: f.id, name: f.name, parent: f.parents?.[0] ?? idx.rootId };
+    idx.folders[f.id] = folderEntry(f, f.parents?.[0] ?? idx.rootId);
     dirty = true;
   }
 
@@ -312,7 +319,7 @@ export function applyLocalRemove(id: string) {
 }
 
 export function registerFolder(f: DriveFile) {
-  index!.folders[f.id] = { id: f.id, name: f.name, parent: f.parents?.[0] ?? index!.rootId };
+  index!.folders[f.id] = folderEntry(f, f.parents?.[0] ?? index!.rootId);
   emit();
 }
 

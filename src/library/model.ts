@@ -42,11 +42,13 @@ export interface Folder {
   id: string;
   name: string;
   parent: string;
+  /** Book color, read from the folder's Drive properties. */
+  color?: string;
 }
 
 /** Disposable: always rebuildable from the files in Drive. */
 export interface KbIndex {
-  version: 2;
+  version: 3;
   rootId: string;
   builtAt: string;
   folders: Record<string, Folder>;
@@ -54,7 +56,7 @@ export interface KbIndex {
 }
 
 export interface KbState {
-  version: 2;
+  version: 3;
   rootId: string;
   pageToken: string | null;
   lastSync: string | null;

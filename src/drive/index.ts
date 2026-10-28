@@ -1,7 +1,7 @@
 // The one door to Drive. The token covers the whole Drive, so every call here
 // checks that it stays inside the configured root folder.
 import { googleDrive } from './google';
-import { isFolder, type DriveBackend, type DriveChange, type DriveFile } from './types';
+import { isFolder, type DriveBackend, type DriveChange, type DriveFile, type FolderExtra } from './types';
 
 export * from './types';
 export { DriveError } from './http';
@@ -103,11 +103,17 @@ export const drive = {
     return f;
   },
 
-  async createFolder(parentId: string, name: string) {
+  async createFolder(parentId: string, name: string, extra?: FolderExtra) {
     assertFolder(parentId);
-    const f = await backend.createFolder(parentId, name);
+    const f = await backend.createFolder(parentId, name, extra);
     guard.addFolder(f.id);
     return f;
+  },
+
+  async updateFolder(id: string, extra: FolderExtra) {
+    if (id === guard.rootId) throw new OutsideRootError();
+    assertFolder(id);
+    return backend.updateFolder(id, extra);
   },
 
   startPageToken: () => backend.startPageToken(),

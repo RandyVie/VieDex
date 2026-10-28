@@ -85,6 +85,7 @@ created: 2026-10-28
 
 - Files without frontmatter are still valid. Title falls back to the file name.
 - Images are never modified. They live in `_media/` and are shown through image blocks.
+- **Book color** is stored on the book's Drive folder as the custom property `viedexColor` (exact hex), and also as Drive's own folder color (Drive snaps it to its palette). The 10 most recent color picks are a per-device convenience in the browser.
 
 ## Blocks
 

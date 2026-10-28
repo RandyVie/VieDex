@@ -214,6 +214,11 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
   for (const [lib, dir, name, text] of FILES) {
     add(dir ? folderPath(dir, libs.get(lib)!) : libs.get(lib)!, name, MD, text);
   }
+  // Demo book colors, as VieDex would store them on the folder.
+  for (const [name, color] of [['Typography', '#8ab4ff'], ['Rebrand 2026', '#ff8f6b'], ['Meetings', '#c49bff']]) {
+    const folder = [...nodes.values()].find((n) => n.name === name && n.mimeType === FOLDER_MIME);
+    if (folder) folder.properties = { viedexColor: color };
+  }
   const media = folderPath('_media', libs.get('Design library')!);
   for (const [name, content] of IMAGES) add(media, name, 'image/svg+xml', content);
   add(libs.get('Design library')!, 'Scan of receipt.pdf', 'application/pdf', '%PDF');
@@ -248,7 +253,19 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
       return wait(pub(n));
     },
     createText: (parentId: string, name: string, text: string, mimeType: string) => wait(pub(add(parentId, name, mimeType, text))),
-    createFolder: (parentId: string, name: string) => wait(pub(add(parentId, name, FOLDER_MIME))),
+    createFolder(parentId: string, name: string, extra: { properties?: Record<string, string>; folderColorRgb?: string } = {}) {
+      const n = add(parentId, name, FOLDER_MIME);
+      Object.assign(n, extra);
+      log[log.length - 1] = { fileId: n.id, removed: false, file: pub(n) };
+      return wait(pub(n));
+    },
+    updateFolder(id: string, extra: { properties?: Record<string, string>; folderColorRgb?: string }) {
+      const n = get(id);
+      n.properties = { ...n.properties, ...extra.properties };
+      if (extra.folderColorRgb) n.folderColorRgb = extra.folderColorRgb;
+      touch(n);
+      return wait(pub(n));
+    },
     trash(id: string) {
       const n = get(id);
       n.trashed = true;

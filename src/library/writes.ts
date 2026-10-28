@@ -4,7 +4,7 @@ import { blockAsText, blockMarkup, ensureIds, newBlockId, parseBody, replaceBloc
 import { parseDoc, serializeDoc } from '../md/frontmatter';
 import { blockById, blockIdTaken, usedIn } from './derived';
 import { BLOCKS_FOLDER, COLLECTION_FILE, MEDIA_FOLDER } from './layout';
-import { applyLocalRemove, applyLocalWrite, ensureTopFolder, getIndex, registerFolder } from './library';
+import { applyLocalRemove, applyLocalWrite, COLOR_PROPERTY, ensureTopFolder, getIndex, registerFolder } from './library';
 import type { BlockEntry, FileEntry } from './model';
 
 export class ConflictError extends Error {
@@ -32,13 +32,20 @@ export function withBlockIds(text: string): string {
   return serializeDoc(doc);
 }
 
-export async function createBook(name: string): Promise<string> {
+/** Book color on the folder: exact for VieDex, and Drive's own folder color (Drive snaps it to its palette). */
+const colorExtra = (color: string) => ({ properties: { [COLOR_PROPERTY]: color }, folderColorRgb: color });
+
+export async function setBookColor(id: string, color: string): Promise<void> {
+  registerFolder(await drive.updateFolder(id, colorExtra(color)));
+}
+
+export async function createBook(name: string, color?: string): Promise<string> {
   const idx = getIndex()!;
   const clean = safeName(name).replace(/^_+/, '');
   if (Object.values(idx.folders).some((f) => f.parent === idx.rootId && f.name.toLowerCase() === clean.toLowerCase())) {
     throw new Error('A book with that name already exists.');
   }
-  const f = await drive.createFolder(idx.rootId, clean);
+  const f = await drive.createFolder(idx.rootId, clean, color ? colorExtra(color) : undefined);
   registerFolder(f);
   return f.id;
 }

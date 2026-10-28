@@ -6,6 +6,7 @@ import { getIndex } from '../library/library';
 import type { FileEntry } from '../library/model';
 import { excerpt } from '../library/search';
 import { confirmDeleteDoc } from './actions';
+import { DEFAULT_BOOK_COLOR } from './colors';
 import { formatDate, h, icon } from './dom';
 import { ui } from './ui-state';
 
@@ -158,4 +159,53 @@ export function switchToggle(label: string, checked: boolean, onChange: (on: boo
   const input = h('input', { type: 'checkbox', role: 'switch', class: 'switch-input', checked });
   input.addEventListener('change', () => onChange(input.checked));
   return h('label', { class: 'switch' }, input, h('span', { class: 'switch-track', 'aria-hidden': 'true' }), h('span', null, label));
+}
+
+/** Set a book's color on an element as --book-color. */
+export function paintBook<T extends HTMLElement>(el: T, color?: string): T {
+  el.style.setProperty('--book-color', color ?? DEFAULT_BOOK_COLOR);
+  return el;
+}
+
+export interface BookStats {
+  id: string;
+  name: string;
+  color?: string;
+  docs: number;
+  blocks: number;
+  edited: string;
+}
+
+export function bookStats(): BookStats[] {
+  const index = getIndex();
+  if (!index) return [];
+  const docs = Object.values(index.files).filter((f) => f.kind === 'document');
+  return Object.values(index.folders)
+    .filter((f) => f.parent === index.rootId && !f.name.startsWith('_'))
+    .map((b) => {
+      const inBook = docs.filter((d) => d.book === b.id);
+      return {
+        id: b.id,
+        name: b.name,
+        color: b.color,
+        docs: inBook.length,
+        blocks: inBook.reduce((n, d) => n + d.blocks.length, 0),
+        edited: inBook.reduce((m, d) => (d.modifiedTime > m ? d.modifiedTime : m), ''),
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export function bookCard(b: BookStats) {
+  return paintBook(
+    h(
+      'a',
+      { class: 'book-card', href: `#/book/${b.id}` },
+      h('span', { class: 'book-spine' }),
+      h('span', { class: 'book-name' }, b.name),
+      h('span', { class: 'book-meta' }, `${b.docs} ${b.docs === 1 ? 'document' : 'documents'} · ${b.blocks} blocks`),
+      b.edited && h('span', { class: 'book-meta' }, `Edited ${formatDate(b.edited)}`),
+    ),
+    b.color,
+  );
 }

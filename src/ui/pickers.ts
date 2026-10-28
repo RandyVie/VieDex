@@ -7,6 +7,7 @@ import { uploadMedia } from '../library/writes';
 import { blockBadge, placeOf } from './components';
 import { clear, h, icon } from './dom';
 import { errorText, toast } from './feedback';
+import { colorField, rememberColor } from './colors';
 import { forgetMediaLinks, mediaImage } from './media';
 
 function modal<T>(title: string, build: (done: (v: T | null) => void) => Node[]): Promise<T | null> {
@@ -123,4 +124,27 @@ export function insertAtCursor(area: HTMLTextAreaElement, text: string) {
   area.setSelectionRange(caret, caret);
   area.focus();
   area.dispatchEvent(new Event('input'));
+}
+
+/** Name and color for a new book, or just the color for an existing one. */
+export function bookDialog(opts: { title: string; okLabel: string; name?: string; color?: string; askName: boolean }): Promise<{ name: string; color: string } | null> {
+  return modal<{ name: string; color: string }>(opts.title, (done) => {
+    const input = h('input', { class: 'input', value: opts.name ?? '', placeholder: 'Book name', 'aria-label': 'Book name' });
+    const color = colorField(opts.color ?? '');
+    const submit = () => {
+      const name = input.value.trim();
+      if (opts.askName && !name) return input.focus();
+      rememberColor(color.value());
+      done({ name, color: color.value() });
+    };
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && submit());
+    if (opts.askName) queueMicrotask(() => input.focus());
+    const nodes: Node[] = [];
+    if (opts.askName) nodes.push(h('label', { class: 'field' }, h('span', null, 'Name'), input));
+    nodes.push(
+      h('div', { class: 'field' }, h('span', null, 'Color'), color.el),
+      h('div', { class: 'dialog-actions' }, h('button', { class: 'btn', onclick: () => done(null) }, 'Cancel'), h('button', { class: 'btn btn-primary', onclick: submit }, opts.okLabel)),
+    );
+    return nodes;
+  });
 }

@@ -2,7 +2,9 @@ import { isBlockType, type BlockType } from '../md/blocks';
 
 export type Route =
   | { name: 'home'; focus?: 'loose' }
+  | { name: 'books' }
   | { name: 'book'; id: string }
+  | { name: 'blocks-all' }
   | { name: 'doc'; id: string }
   | { name: 'edit-doc'; id: string }
   | { name: 'new-doc'; bookId: string | null }
@@ -28,8 +30,11 @@ export function parseRoute(hash = location.hash): Route {
       break;
     case 'new-doc':
       return { name: 'new-doc', bookId: b || null };
+    case 'books':
+      return { name: 'books' };
     case 'blocks':
-      if (b && isBlockType(b)) return c === 'new' ? { name: 'new-block', type: b } : { name: 'blocks', type: b };
+      if (!b) return { name: 'blocks-all' };
+      if (isBlockType(b)) return c === 'new' ? { name: 'new-block', type: b } : { name: 'blocks', type: b };
       break;
     case 'block':
       if (b) return c === 'edit' ? { name: 'edit-block', id: b } : { name: 'block', id: b };

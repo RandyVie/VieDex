@@ -2,14 +2,15 @@ import { allBlocks, brokenLinks } from '../library/derived';
 import { BLOCK_LABEL, isReserved } from '../library/layout';
 import { getIndex, lastSync, onLibraryChange, refresh, status } from '../library/library';
 import { BLOCK_TYPES } from '../md/blocks';
+import { paintBook } from './components';
 import { clear, formatTime, h, icon } from './dom';
 import { errorText, toast } from './feedback';
 import { parseRoute, type Route } from './router';
 import { ui } from './ui-state';
 import { blockView } from './views/block';
 import { blockEditorView } from './views/block-editor';
-import { blocksView } from './views/blocks';
-import { bookView, newBook } from './views/book';
+import { blocksOverview, blocksView } from './views/blocks';
+import { booksView, bookView, newBook } from './views/book';
 import { brokenView } from './views/broken';
 import { docView } from './views/doc';
 import { docEditorView } from './views/doc-editor';
@@ -112,11 +113,11 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     clear(
       nav,
       link('#/', 'Home', undefined, icon('home')),
-      h('div', { class: 'nav-head' }, h('span', null, 'Books'), addBook),
-      books.map((b) => link(`#/book/${b.id}`, b.name, docs.filter((d) => d.book === b.id).length, h('span', { class: 'book-dot' }))),
+      h('div', { class: 'nav-head' }, h('a', { class: 'nav-head-link', href: '#/books' }, 'Books'), addBook),
+      books.map((b) => link(`#/book/${b.id}`, b.name, docs.filter((d) => d.book === b.id).length, paintBook(h('span', { class: 'book-dot' }), b.color))),
       !books.length && h('p', { class: 'nav-empty' }, 'No books yet.'),
       loose > 0 && link('#/loose', 'Loose pages', loose, h('span', { class: 'book-dot book-dot-loose' })),
-      h('div', { class: 'nav-head' }, h('span', null, 'Blocks')),
+      h('div', { class: 'nav-head' }, h('a', { class: 'nav-head-link', href: '#/blocks' }, 'Blocks')),
       BLOCK_TYPES.map((t) => link(`#/blocks/${t}`, BLOCK_LABEL[t].many, blockCounts.get(t) ?? 0, h('span', { class: `swatch swatch-${t}` }))),
       broken > 0 && [h('div', { class: 'nav-head' }), h('a', { class: 'nav-link nav-warn', href: '#/broken' }, h('span', { class: 'nav-label' }, 'Broken links'), h('span', { class: 'count' }, String(broken)))],
     );
@@ -156,8 +157,12 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     switch (r.name) {
       case 'home':
         return homeView(r.focus);
+      case 'books':
+        return booksView();
       case 'book':
         return bookView(r.id);
+      case 'blocks-all':
+        return blocksOverview();
       case 'doc':
         return docView(r.id);
       case 'edit-doc':

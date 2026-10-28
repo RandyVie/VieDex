@@ -3,7 +3,7 @@ import { FOLDER_MIME, type ChangePage, type DriveBackend, type DriveChange, type
 
 const API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD = 'https://www.googleapis.com/upload/drive/v3';
-const FIELDS = 'id,name,mimeType,parents,modifiedTime,size,trashed,thumbnailLink,webViewLink';
+const FIELDS = 'id,name,mimeType,parents,modifiedTime,size,trashed,thumbnailLink,webViewLink,properties,folderColorRgb';
 
 // IDs go into query strings; refuse anything that isn't a plain Drive ID.
 function safeId(id: string): string {
@@ -96,11 +96,20 @@ export const googleDrive: DriveBackend = {
     });
   },
 
-  async createFolder(parentId, name) {
+  async createFolder(parentId, name, extra = {}) {
     const res = await driveFetch(`${API}/files?fields=${FIELDS}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, mimeType: FOLDER_MIME, parents: [safeId(parentId)] }),
+      body: JSON.stringify({ name, mimeType: FOLDER_MIME, parents: [safeId(parentId)], ...extra }),
+    });
+    return res.json();
+  },
+
+  async updateFolder(id, extra) {
+    const res = await driveFetch(`${API}/files/${safeId(id)}?fields=${FIELDS}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(extra),
     });
     return res.json();
   },
