@@ -3222,7 +3222,8 @@ a.block-title:hover {
 }
 
 .code-box pre {
-  padding-right: 140px;
+  /* Room above the first line for the copy button and language label, so long lines never run under them. */
+  padding-top: 40px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

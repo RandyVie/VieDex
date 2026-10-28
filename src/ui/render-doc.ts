@@ -28,8 +28,6 @@ interface CardBlock {
 }
 
 export interface CardOptions {
-  /** Show where the block comes from, for embeds. */
-  fromFileId?: string;
   /** Show where it lives and where it is used, for collection views. */
   usage?: { homeId: string };
   compact?: boolean;
@@ -57,7 +55,8 @@ function embedFigure(target: string, ctx: RenderContext): Node {
   const ref = blockById(id);
   if (!ref) return h('div', { class: 'missing' }, `No block with ID ^${id}`);
   if (ctx.depth > 0) return h('p', null, h('a', { href: `#/block/${encodeURIComponent(id)}` }, `^${id} ${displayTitle(ref)}`));
-  return blockCard(ref, { fromFileId: ref.fileId }, ctx);
+  // In a document an embedded block reads like any other; where it lives is on its own page.
+  return blockCard(ref, {}, ctx);
 }
 
 export function renderSegments(segments: Segment[], ctx: RenderContext): HTMLElement {
@@ -122,7 +121,6 @@ function copyButton(b0: CardBlock) {
 
 export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderContext = { file: null, depth: 0 }): HTMLElement {
   const href = b.id ? `#/block/${encodeURIComponent(b.id)}` : null;
-  const uses = b.id ? usedIn(b.id) : [];
   const url = b.type === 'link' ? firstUrl(b.content) : null;
   // A link without its own title is named after its website: short, and something to click.
   const site = url && !b.title.trim() ? displayTitle(b) : null;
@@ -140,8 +138,6 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
         ? h('a', { class: `block-title${site ? ' is-site' : ''}`, href }, title)
         : h('span', { class: `block-title${site ? ' is-site' : ''}` }, title)
       : h('span', { class: 'block-title' }),
-    opts.fromFileId && h('span', { class: 'block-from' }, 'from ', placeLink(opts.fromFileId)),
-    !opts.fromFileId && !opts.usage && uses.length > 0 && h('a', { class: 'block-uses', href: href!, title: 'Documents that embed this block' }, `used in ${uses.length}`),
     // Code has its own copy button on the code box itself.
     b.type !== 'image' && b.type !== 'code' && b.content.trim() && copyButton(b),
     opts.usage && b.id && !b.id.startsWith('~') && deleteButton(b.id),
@@ -157,7 +153,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
 
   return h(
     'section',
-    { class: `block block-${b.type}${opts.fromFileId ? ' is-embedded' : ''}${url && !body && !b.title.trim() ? ' is-bare-link' : ''}` },
+    { class: `block block-${b.type}${url && !body && !b.title.trim() ? ' is-bare-link' : ''}` },
     head,
     url && h('a', { class: 'block-url', href: hrefOf(url), target: '_blank', rel: 'noopener noreferrer', title: url }, icon('external'), h('span', { class: 'block-url-text' }, url)),
     body,
