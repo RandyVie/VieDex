@@ -124,8 +124,22 @@ export function displayTitle(b: Pick<ParsedBlock, 'title' | 'content' | 'type'>)
   return `Untitled ${b.type}`;
 }
 
+/** The first link in a block's content, exactly as written (with or without http). */
 export function firstUrl(content: string): string | null {
-  return /https?:\/\/[^\s<>)\]]+/.exec(content)?.[0] ?? null;
+  return /(?:https?:\/\/|www\.)[^\s<>)\]]+/i.exec(content)?.[0] ?? null;
+}
+
+/** Where a link goes when clicked. The text itself is never changed: `www.` only gets a scheme here. */
+export const hrefOf = (url: string) => (/^www\./i.test(url) ? `https://${url}` : url);
+
+/** A link block's note: its content without the line that is only the link. */
+export function linkNote(content: string, url: string | null): string {
+  if (!url) return content;
+  return content
+    .split('\n')
+    .filter((l) => l.trim() !== url)
+    .join('\n')
+    .trim();
 }
 
 /** The line that shows a block elsewhere, with its title for anyone reading the raw file. */

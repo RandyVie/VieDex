@@ -1,7 +1,7 @@
 import { getIndex } from '../../library/library';
 import type { FileEntry } from '../../library/model';
 import { convertLinks, pendingLinks } from '../../library/writes';
-import { hrefOf } from '../../md/linkify';
+import { hrefOf } from '../../md/blocks';
 import { empty, placeOf } from '../components';
 import { h, icon } from '../dom';
 import { errorText, toast } from '../feedback';

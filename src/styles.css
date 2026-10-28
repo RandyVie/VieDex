@@ -2442,6 +2442,12 @@ a.block-title:hover {
 
 /* Plain reading: blocks become part of the text. Only the view changes. */
 
+/* A link block that only repeats a link from the text above adds nothing here. */
+.blocks-plain .block.is-echo .block-url,
+.blocks-plain .block.is-echo.is-bare-link {
+  display: none;
+}
+
 .blocks-plain .block {
   margin: 0;
   border: 0;
@@ -2456,8 +2462,17 @@ a.block-title:hover {
 }
 
 .blocks-plain .block-head > :not(.block-title),
-.blocks-plain .block-title:empty,
+.blocks-plain .block-title:empty {
+  display: none;
+}
+
 .blocks-plain .block-url {
+  margin: 0 0 1em;
+  font: inherit;
+  font-size: var(--text-body);
+}
+
+.blocks-plain .block-url .icon {
   display: none;
 }
 
@@ -2773,6 +2788,10 @@ a.block-title:hover {
   width: 13px;
   height: 13px;
   flex: none;
+}
+
+.block.is-bare-link .block-url {
+  margin-bottom: 12px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

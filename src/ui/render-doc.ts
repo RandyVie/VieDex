@@ -1,4 +1,5 @@
-import { displayTitle, embedCode, firstUrl, parseBody, type BlockType, type Segment } from '../md/blocks';
+import { displayTitle, embedCode, firstUrl, hrefOf, linkNote, parseBody, type BlockType, type Segment } from '../md/blocks';
+import { findUrls, urlKey } from '../md/linkify';
 import { renderMarkdown } from '../md/render';
 import { blockById, lookupLink, mediaByName, usedIn } from '../library/derived';
 import { BLOCK_LABEL } from '../library/layout';
@@ -60,10 +61,27 @@ function embedFigure(target: string, ctx: RenderContext): Node {
 
 export function renderSegments(segments: Segment[], ctx: RenderContext): HTMLElement {
   const root = h('div', { class: 'doc-body' });
+  // Links in the text just above. A link block repeating one of them is an "echo":
+  // with blocks hidden, its URL is not shown a second time.
+  let above = new Set<string>();
+  const markEcho = (el: Node, type: BlockType | undefined, content: string) => {
+    const url = type === 'link' ? firstUrl(content) : null;
+    if (el instanceof HTMLElement && url && above.has(urlKey(url))) el.classList.add('is-echo');
+  };
   for (const seg of segments) {
-    if (seg.kind === 'text') root.append(markdown(seg.text, ctx));
-    else if (seg.kind === 'embed') root.append(embedFigure(seg.target, ctx));
-    else root.append(blockCard(seg.block, {}, ctx));
+    if (seg.kind === 'text') {
+      root.append(markdown(seg.text, ctx));
+      above = new Set(seg.text.split('\n').flatMap(findUrls).map(urlKey));
+    } else if (seg.kind === 'embed') {
+      const el = embedFigure(seg.target, ctx);
+      const ref = seg.target.startsWith('^') ? blockById(seg.target.slice(1)) : null;
+      markEcho(el, ref?.type, ref?.content ?? '');
+      root.append(el);
+    } else {
+      const el = blockCard(seg.block, {}, ctx);
+      markEcho(el, seg.block.type, seg.block.content);
+      root.append(el);
+    }
   }
   return root;
 }
@@ -113,15 +131,19 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
     opts.usage && b.id && !b.id.startsWith('~') && deleteButton(b.id),
   );
 
-  const body = opts.compact && b.type !== 'image' && b.type !== 'code'
-    ? h('div', { class: 'block-body' }, h('p', { class: 'block-clip' }, b.content.replace(/\s+/g, ' ').slice(0, 220)))
-    : h('div', { class: 'block-body' }, renderSegments(parseBody(b.content), { file: ctx.file, depth: ctx.depth + 1 }));
+  // A link card shows its URL once, as the link line; the body is only the note.
+  const text = url ? linkNote(b.content, url) : b.content;
+  const body = !text.trim()
+    ? null
+    : opts.compact && b.type !== 'image' && b.type !== 'code'
+      ? h('div', { class: 'block-body' }, h('p', { class: 'block-clip' }, text.replace(/\s+/g, ' ').slice(0, 220)))
+      : h('div', { class: 'block-body' }, renderSegments(parseBody(text), { file: ctx.file, depth: ctx.depth + 1 }));
 
   return h(
     'section',
-    { class: `block block-${b.type}${opts.fromFileId ? ' is-embedded' : ''}` },
+    { class: `block block-${b.type}${opts.fromFileId ? ' is-embedded' : ''}${url && !body && !b.title.trim() ? ' is-bare-link' : ''}` },
     head,
-    url && b.type === 'link' && h('a', { class: 'block-url', href: url, target: '_blank', rel: 'noopener noreferrer' }, icon('external'), url.replace(/^https?:\/\//, '')),
+    url && h('a', { class: 'block-url', href: hrefOf(url), target: '_blank', rel: 'noopener noreferrer' }, icon('external'), url),
     body,
     opts.usage && usageFooter(b.id, opts.usage.homeId),
   );

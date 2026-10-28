@@ -1,6 +1,6 @@
 // Finds web links in normal text and adds a link block after each paragraph that has one.
 // The sentence keeps its link; code, blocks, embeds and frontmatter are never touched.
-import { blockMarkup, embedCode, firstUrl, newBlockId, parseBody, type ParsedBlock } from './blocks';
+import { blockMarkup, embedCode, firstUrl, hrefOf, newBlockId, parseBody, type ParsedBlock } from './blocks';
 
 const URL_RE = /\b(?:https?:\/\/|www\.)[^\s<>"'`[\]]+/gi;
 const FENCE_RE = /^[ \t]*(```|~~~)/;
@@ -14,8 +14,6 @@ export function cleanUrl(raw: string): string {
   while (u.endsWith(')') && (u.match(/\(/g)?.length ?? 0) < (u.match(/\)/g)?.length ?? 0)) u = u.slice(0, -1).replace(/[.,;:!?]+$/, '');
   return u;
 }
-
-export const hrefOf = (url: string) => (/^www\./i.test(url) ? `https://${url}` : url);
 
 /** Compare links loosely: no scheme, no www, no trailing slash, case-insensitive host. */
 export function urlKey(url: string): string {
@@ -89,7 +87,8 @@ export function linkify(body: string, ctx: LinkifyContext): LinkifyResult {
       } else {
         const id = newBlockId((x) => ctx.taken(x) || usedIds.has(x));
         usedIds.add(id);
-        additions.push(blockMarkup('link', id, '', hrefOf(url)));
+        // The link goes into the block exactly as it was written.
+        additions.push(blockMarkup('link', id, '', url));
         result.created.push(url);
       }
     }
