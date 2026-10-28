@@ -88,6 +88,14 @@ export const googleDrive: DriveBackend = {
     return res.json();
   },
 
+  async trash(id) {
+    await driveFetch(`${API}/files/${safeId(id)}?fields=id`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trashed: true }),
+    });
+  },
+
   async createFolder(parentId, name) {
     const res = await driveFetch(`${API}/files?fields=${FIELDS}`, {
       method: 'POST',

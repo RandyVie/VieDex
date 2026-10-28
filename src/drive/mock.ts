@@ -249,6 +249,12 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
     },
     createText: (parentId: string, name: string, text: string, mimeType: string) => wait(pub(add(parentId, name, mimeType, text))),
     createFolder: (parentId: string, name: string) => wait(pub(add(parentId, name, FOLDER_MIME))),
+    trash(id: string) {
+      const n = get(id);
+      n.trashed = true;
+      log.push({ fileId: id, removed: true });
+      return wait(undefined);
+    },
     async createBlob(parentId: string, name: string, blob: Blob) {
       const n = add(parentId, name, blob.type || 'application/octet-stream');
       n.blob = blob;

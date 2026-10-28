@@ -3,6 +3,7 @@ import { renderMarkdown } from '../md/render';
 import { blockById, lookupLink, mediaByName, usedIn } from '../library/derived';
 import { BLOCK_LABEL } from '../library/layout';
 import type { FileEntry } from '../library/model';
+import { confirmDeleteBlock } from './actions';
 import { placeLink } from './components';
 import { h, icon } from './dom';
 import { toast } from './feedback';
@@ -71,6 +72,15 @@ export function renderDocument(body: string, file: FileEntry | null): HTMLElemen
   return renderSegments(parseBody(body), { file, depth: 0 });
 }
 
+function deleteButton(id: string) {
+  const b = h('button', { class: 'icon-btn block-copy', title: 'Delete block', 'aria-label': 'Delete block' }, icon('trash'));
+  b.addEventListener('click', (e) => {
+    e.preventDefault();
+    confirmDeleteBlock(id);
+  });
+  return b;
+}
+
 function copyEmbed(id: string, b0: CardBlock) {
   const b = h('button', { class: 'icon-btn block-copy', title: 'Copy embed code, to paste into a file in Drive', 'aria-label': 'Copy embed code' }, icon('copy'));
   b.addEventListener('click', async (e) => {
@@ -100,6 +110,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
     opts.fromFileId && h('span', { class: 'block-from' }, 'from ', placeLink(opts.fromFileId)),
     !opts.fromFileId && !opts.usage && uses.length > 0 && h('a', { class: 'block-uses', href: href!, title: 'Documents that embed this block' }, `used in ${uses.length}`),
     b.id && !b.id.startsWith('~') && copyEmbed(b.id, b),
+    opts.usage && b.id && !b.id.startsWith('~') && deleteButton(b.id),
   );
 
   const body = opts.compact && b.type !== 'image' && b.type !== 'code'

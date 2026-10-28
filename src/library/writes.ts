@@ -1,11 +1,11 @@
 // Everything the app writes to a library. Each write updates the index right away.
 import { drive, type DriveFile } from '../drive';
-import { blockMarkup, ensureIds, newBlockId, parseBody, replaceBlock, type BlockType } from '../md/blocks';
+import { blockAsText, blockMarkup, ensureIds, newBlockId, parseBody, replaceBlock, replaceEmbeds, unwrapBlock, type BlockType } from '../md/blocks';
 import { parseDoc, serializeDoc } from '../md/frontmatter';
-import { blockById, blockIdTaken } from './derived';
+import { blockById, blockIdTaken, usedIn } from './derived';
 import { BLOCKS_FOLDER, COLLECTION_FILE, MEDIA_FOLDER } from './layout';
-import { applyLocalWrite, ensureTopFolder, getIndex, registerFolder } from './library';
-import type { FileEntry } from './model';
+import { applyLocalRemove, applyLocalWrite, ensureTopFolder, getIndex, registerFolder } from './library';
+import type { BlockEntry, FileEntry } from './model';
 
 export class ConflictError extends Error {
   constructor() {
@@ -56,28 +56,42 @@ export async function saveDocument(id: string, text: string, loaded: DriveFile, 
     if (now.modifiedTime !== loaded.modifiedTime) throw new ConflictError();
   }
   const final = withBlockIds(text);
+  const before = getIndex()!.files[id]?.blocks ?? [];
   const file = await drive.writeText(id, final, loaded.mimeType || 'text/markdown');
-  return applyLocalWrite(file, final);
+  // A block taken out of this document but embedded elsewhere moves to its collection.
+  const kept = new Set(parseBody(parseDoc(final).body).flatMap((s) => (s.kind === 'block' && s.block.id ? [s.block.id] : [])));
+  const orphaned = before.filter((b) => b.id && !kept.has(b.id) && usedIn(b.id).some((f) => f !== id));
+  const entry = applyLocalWrite(file, final);
+  if (orphaned.length) await appendToCollections(orphaned);
+  return entry;
+}
+
+/** Append blocks to the end of their type's file in `_blocks/`, keeping their IDs. */
+async function appendToCollections(blocks: BlockEntry[]) {
+  const folder = await ensureTopFolder(BLOCKS_FOLDER);
+  const byType = new Map<BlockType, BlockEntry[]>();
+  for (const b of blocks) byType.set(b.type, [...(byType.get(b.type) ?? []), b]);
+  for (const [type, list] of byType) {
+    const markup = list.map((b) => blockMarkup(type, b.id ?? newBlockId(blockIdTaken), b.title, b.content)).join('\n\n');
+    const existing = Object.values(getIndex()!.files).find((f) => f.parent === folder && f.name.toLowerCase() === COLLECTION_FILE[type]);
+    let file: DriveFile;
+    let text: string;
+    if (existing) {
+      const current = await drive.readText(existing.id);
+      text = `${current.replace(/\s+$/, '')}\n\n${markup}\n`;
+      file = await drive.writeText(existing.id, text, existing.mimeType || 'text/markdown');
+    } else {
+      text = `${markup}\n`;
+      file = await drive.createText(folder, COLLECTION_FILE[type], text, 'text/markdown');
+    }
+    applyLocalWrite(file, text);
+  }
 }
 
 /** Standalone blocks go to the end of their type's file in `_blocks/`. */
 export async function createBlock(type: BlockType, title: string, content: string): Promise<string> {
-  const idx = getIndex()!;
-  const folder = await ensureTopFolder(BLOCKS_FOLDER);
   const id = newBlockId(blockIdTaken);
-  const markup = blockMarkup(type, id, title.trim(), content);
-  const existing = Object.values(idx.files).find((f) => f.parent === folder && f.name.toLowerCase() === COLLECTION_FILE[type]);
-  let file: DriveFile;
-  let text: string;
-  if (existing) {
-    const current = await drive.readText(existing.id);
-    text = `${current.replace(/\s+$/, '')}\n\n${markup}\n`;
-    file = await drive.writeText(existing.id, text, existing.mimeType || 'text/markdown');
-  } else {
-    text = `${markup}\n`;
-    file = await drive.createText(folder, COLLECTION_FILE[type], text, 'text/markdown');
-  }
-  applyLocalWrite(file, text);
+  await appendToCollections([{ id, type, title: title.trim(), content }]);
   return id;
 }
 
@@ -111,4 +125,49 @@ export async function uploadMedia(blob: File): Promise<FileEntry> {
   const ext = dot > 0 ? blob.name.slice(dot).toLowerCase() : '';
   const file = await drive.createBlob(folder, uniqueName(base, ext, folder), blob);
   return applyLocalWrite(file, null);
+}
+
+/**
+ * Move a document to the Drive trash. Blocks written in it move to their collections
+ * first, with the same IDs, so embeds elsewhere keep working.
+ */
+export async function deleteDocument(id: string): Promise<void> {
+  const doc = parseDoc(await drive.readText(id));
+  const blocks: BlockEntry[] = parseBody(doc.body).flatMap((s) =>
+    s.kind === 'block' ? [{ id: s.block.id, type: s.block.type, title: s.block.title, content: s.block.content }] : [],
+  );
+  if (blocks.length) await appendToCollections(blocks);
+  await drive.trash(id);
+  applyLocalRemove(id);
+}
+
+/** Rewrite one file's body, keeping its frontmatter. */
+async function editBody(fileId: string, change: (body: string) => string | null) {
+  const f = getIndex()!.files[fileId];
+  if (!f) return;
+  const doc = parseDoc(await drive.readText(fileId));
+  const body = change(doc.body);
+  if (body == null || body === doc.body) return;
+  doc.body = body;
+  const text = serializeDoc(doc);
+  applyLocalWrite(await drive.writeText(fileId, text, f.mimeType || 'text/markdown'), text);
+}
+
+/**
+ * Delete a block. Where it was embedded, and in the document it was written in,
+ * its text stays behind as normal text. In a collection file it is simply removed.
+ */
+export async function deleteBlock(id: string): Promise<void> {
+  const ref = blockById(id);
+  if (!ref || ref.synthetic) throw new Error('This block has no ID, so it can only be removed by editing its document.');
+  const text = blockAsText(ref);
+  for (const fileId of usedIn(id)) {
+    if (fileId !== ref.fileId) await editBody(fileId, (body) => replaceEmbeds(body, id, text));
+  }
+  const home = getIndex()!.files[ref.fileId];
+  await editBody(ref.fileId, (body) => {
+    const out = unwrapBlock(body, id, home?.kind === 'collection' ? '' : text);
+    // The home may also embed itself somewhere lower down.
+    return out == null ? null : replaceEmbeds(out, id, text);
+  });
 }

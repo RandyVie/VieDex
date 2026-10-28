@@ -173,3 +173,33 @@ export function replaceBlock(body: string, id: string, title: string, content: s
   lines.splice(b.start, b.end - b.start + 1, ...blockMarkup(b.type, id, title, content).split('\n'));
   return lines.join('\n');
 }
+
+/** Replace a block (opening line through closing :::) with plain text, or drop it when text is ''. */
+export function unwrapBlock(body: string, id: string, text: string): string | null {
+  const seg = parseBody(body).find((s) => s.kind === 'block' && s.block.id === id);
+  if (!seg || seg.kind !== 'block') return null;
+  const lines = body.split('\n');
+  lines.splice(seg.block.start, seg.block.end - seg.block.start + 1, ...(text ? text.split('\n') : []));
+  return lines.join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+/** Replace every `![[^id]]` line (outside code) with plain text. */
+export function replaceEmbeds(body: string, id: string, text: string): string {
+  let fence: string | null = null;
+  const out: string[] = [];
+  for (const line of body.split('\n')) {
+    const f = FENCE_RE.exec(line);
+    if (fence) {
+      if (f && f[1] === fence) fence = null;
+    } else if (f) fence = f[1];
+    const m = fence ? null : EMBED_RE.exec(line);
+    if (m && m[1].split('|')[0].trim() === `^${id}`) out.push(...text.split('\n'));
+    else out.push(line);
+  }
+  return out.join('\n');
+}
+
+/** What a deleted block leaves behind: its title in bold, then its content. */
+export function blockAsText(b: Pick<ParsedBlock, 'title' | 'content'>): string {
+  return [b.title.trim() && `**${b.title.trim()}**`, b.content.trim()].filter(Boolean).join('\n\n');
+}

@@ -109,6 +109,12 @@ Caption for the image.
 - `![[file name.png]]` inside an image block shows a file from `_media/`.
 - Each block type has a collection view listing every block of that type in the library. Each block shows where it lives and every document (and book) that uses it.
 
+### Deleting
+
+- **Deleting a document** moves the file to the Drive trash (never a permanent delete). Every block written in it moves first to its `_blocks/` collection file with the same ID, so embeds elsewhere keep working.
+- **Removing a block from a document** while editing: if other documents embed it, it moves to its collection instead of disappearing.
+- **Deleting a block** removes it everywhere. Each `![[^id]]` embed is replaced by the block's text as normal text, and in the document it was written in the block becomes normal text too. A standalone block is removed from its collection file.
+
 ## Linking
 
 - Wikilinks: `[[Document title]]` in Markdown.

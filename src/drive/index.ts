@@ -90,6 +90,12 @@ export const drive = {
     return f;
   },
 
+  async trash(id: string) {
+    await assertFile(id);
+    await backend.trash(id);
+    guard.forget(id);
+  },
+
   async createBlob(parentId: string, name: string, blob: Blob) {
     assertFolder(parentId);
     const f = await backend.createBlob(parentId, name, blob);

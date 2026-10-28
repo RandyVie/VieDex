@@ -5,7 +5,9 @@ import { displayTitle, embedCode } from '../../md/blocks';
 import { blockBadge, docBadge, empty, placeOf } from '../components';
 import { h, icon } from '../dom';
 import { toast } from '../feedback';
+import { confirmDeleteBlock } from '../actions';
 import { blockCard } from '../render-doc';
+import { go } from '../router';
 import type { View } from './view';
 
 export function blockView(id: string): View {
@@ -45,6 +47,18 @@ export function blockView(id: string): View {
             !b.synthetic && h('a', { class: 'btn btn-primary btn-small', href: `#/block/${encodeURIComponent(id)}/edit` }, 'Edit'),
             !b.synthetic && copy,
             h('a', { class: 'btn btn-small', href: home.href }, homeFile?.kind === 'collection' ? 'Open collection' : 'Open document'),
+            !b.synthetic &&
+              h(
+                'button',
+                {
+                  class: 'btn btn-small btn-quiet-danger push',
+                  onclick: async () => {
+                    if (await confirmDeleteBlock(id)) go(`/blocks/${b.type}`);
+                  },
+                },
+                icon('trash'),
+                'Delete',
+              ),
           ),
         ),
         h('div', { class: 'item-body' }, blockCard(b)),

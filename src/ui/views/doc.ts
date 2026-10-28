@@ -7,7 +7,9 @@ import { parseDoc } from '../../md/frontmatter';
 import { blockBadge, crumbs, docBadge, empty, loading, placeOf, tagChips } from '../components';
 import { clear, formatDate, h, icon } from '../dom';
 import { errorText } from '../feedback';
+import { confirmDeleteDoc } from '../actions';
 import { renderDocument } from '../render-doc';
+import { go } from '../router';
 import type { View } from './view';
 
 function side(f: FileEntry) {
@@ -62,6 +64,18 @@ export function docView(id: string): View {
         { class: 'item-actions' },
         h('a', { class: 'btn btn-primary btn-small', href: `#/doc/${f.id}/edit` }, 'Edit'),
         h('a', { class: 'btn btn-small', href: `https://drive.google.com/file/d/${f.id}/view`, target: '_blank', rel: 'noopener noreferrer' }, icon('external'), 'Open in Drive'),
+        h(
+          'button',
+          {
+            class: 'btn btn-small btn-quiet-danger push',
+            onclick: async () => {
+              const book = f.book;
+              if (await confirmDeleteDoc(f.id)) go(book ? `/book/${book}` : '/');
+            },
+          },
+          icon('trash'),
+          'Delete',
+        ),
       ),
     );
   let header = head();
@@ -79,7 +93,7 @@ export function docView(id: string): View {
   const off = onLibraryChange((kind) => {
     if (kind !== 'index') return;
     const next = getIndex()?.files[id];
-    if (!next) return clear(body, empty('This document was removed in Drive.'));
+    if (!next) return clear(el, h('section', { class: 'view' }, empty('This document was deleted.')));
     const changed = next.modifiedTime !== f.modifiedTime;
     f = next;
     const nh = head();

@@ -33,6 +33,8 @@ export interface DriveBackend {
   createText(parentId: string, name: string, text: string, mimeType: string): Promise<DriveFile>;
   createFolder(parentId: string, name: string): Promise<DriveFile>;
   createBlob(parentId: string, name: string, blob: Blob): Promise<DriveFile>;
+  /** Move to the Drive trash. Never deletes for good: the user can restore it in Drive. */
+  trash(id: string): Promise<void>;
   startPageToken(): Promise<string>;
   listChanges(pageToken: string): Promise<ChangePage>;
   listModifiedSince(iso: string): Promise<DriveFile[]>;

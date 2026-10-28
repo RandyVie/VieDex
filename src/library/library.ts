@@ -301,6 +301,16 @@ export function applyLocalWrite(file: DriveFile, text: string | null): FileEntry
   return entry;
 }
 
+/** Drop a file the app itself just trashed. */
+export function applyLocalRemove(id: string) {
+  const idx = index!;
+  delete idx.files[id];
+  guard.forget(id);
+  derive(idx);
+  emit();
+  persistSoon();
+}
+
 export function registerFolder(f: DriveFile) {
   index!.folders[f.id] = { id: f.id, name: f.name, parent: f.parents?.[0] ?? index!.rootId };
   emit();

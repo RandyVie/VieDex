@@ -5,7 +5,8 @@ import { BLOCK_LABEL } from '../library/layout';
 import { getIndex } from '../library/library';
 import type { FileEntry } from '../library/model';
 import { excerpt } from '../library/search';
-import { formatDate, h } from './dom';
+import { confirmDeleteDoc } from './actions';
+import { formatDate, h, icon } from './dom';
 import { ui } from './ui-state';
 
 export const blockBadge = (type: BlockType) => h('span', { class: `badge badge-${type}` }, BLOCK_LABEL[type].one);
@@ -92,6 +93,25 @@ export function docRow(f: FileEntry, query = '') {
         ),
     ),
     h('span', { class: 'row-meta' }, h('span', { class: 'row-path' }, bookName(f.book)), h('span', { class: 'row-date' }, formatDate(f.modifiedTime))),
+    f.kind === 'document' && rowDelete(() => confirmDeleteDoc(f.id)),
+  );
+}
+
+/** A trash button inside a row link; it must not follow the link. */
+function rowDelete(run: () => Promise<boolean>) {
+  return h(
+    'button',
+    {
+      class: 'icon-btn row-delete',
+      title: 'Delete',
+      'aria-label': 'Delete',
+      onclick: (e: Event) => {
+        e.preventDefault();
+        e.stopPropagation();
+        run();
+      },
+    },
+    icon('trash'),
   );
 }
 
