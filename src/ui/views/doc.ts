@@ -115,6 +115,27 @@ function saveShowBlocks(on: boolean) {
 
 let showBlocks = loadShowBlocks();
 
+// Focus mode: sidebars hidden, article centered. Also a per-device reading preference.
+const FOCUS_KEY = 'viedex.focus';
+let focus = (() => {
+  try {
+    return localStorage.getItem(FOCUS_KEY) === 'on';
+  } catch {
+    return false;
+  }
+})();
+
+function setFocus(on: boolean) {
+  focus = on;
+  document.documentElement.classList.toggle('focus-mode', on);
+  document.querySelectorAll('.focus-btn').forEach((b) => b.classList.toggle('is-on', on));
+  try {
+    localStorage.setItem(FOCUS_KEY, on ? 'on' : 'off');
+  } catch {
+    // Storage blocked: focus lasts until the page reloads.
+  }
+}
+
 export function docView(id: string): View {
   let f = getIndex()!.files[id];
   if (!f) return { live: true, el: h('section', { class: 'view' }, empty('Document not found.', 'It may have been moved or deleted in Drive.')) };
@@ -132,6 +153,16 @@ export function docView(id: string): View {
         { class: 'item-actions' },
         h('a', { class: 'btn btn-primary btn-small', href: `#/doc/${f.id}/edit` }, 'Edit'),
         h('a', { class: 'btn btn-small', href: `https://drive.google.com/file/d/${f.id}/view`, target: '_blank', rel: 'noopener noreferrer' }, icon('external'), 'Open in Drive'),
+        h(
+          'button',
+          {
+            class: `btn btn-small focus-btn${focus ? ' is-on' : ''}`,
+            title: 'Focus: hide the sidebars (F, Esc to leave)',
+            onclick: () => setFocus(!focus),
+          },
+          icon('focus'),
+          'Focus',
+        ),
         switchToggle('Show blocks', showBlocks, (on) => {
           showBlocks = on;
           saveShowBlocks(on);
@@ -179,5 +210,25 @@ export function docView(id: string): View {
     if (changed) load();
     else drive.readText(f.id).then((text) => clear(body, renderDocument(parseDoc(text).body, f))).catch(() => {});
   });
-  return { el, dispose: off };
+  // F toggles focus while reading, Esc leaves it. Never while typing in a field.
+  const onKey = (e: KeyboardEvent) => {
+    const typing = e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]');
+    if (e.metaKey || e.ctrlKey || e.altKey || typing) return;
+    if (e.key === 'f' || e.key === 'F') setFocus(!focus);
+    else if (e.key === 'Escape' && focus) setFocus(false);
+    else return;
+    e.preventDefault();
+  };
+  window.addEventListener('keydown', onKey);
+  document.documentElement.classList.toggle('focus-mode', focus);
+
+  return {
+    el,
+    dispose: () => {
+      off();
+      window.removeEventListener('keydown', onKey);
+      // Focus only applies to reading a document; other pages keep their sidebars.
+      document.documentElement.classList.remove('focus-mode');
+    },
+  };
 }
