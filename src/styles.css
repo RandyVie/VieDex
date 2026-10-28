@@ -3226,6 +3226,79 @@ a.block-title:hover {
   padding-top: 40px;
 }
 
+/* --- Code page: language filter --------------------------------------------- */
+
+.with-side {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 32px;
+  align-items: start;
+}
+
+.lang-side {
+  position: sticky;
+  top: 16px;
+  display: grid;
+  gap: 2px;
+}
+
+.lang-side h2 {
+  margin: 0 0 8px;
+  font: 11px var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+}
+
+.lang-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.lang-item:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.lang-item.is-active {
+  background: color-mix(in srgb, var(--b-code) 14%, transparent);
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--b-code);
+}
+
+@media (max-width: 1100px) {
+  .with-side {
+    grid-template-columns: 1fr;
+  }
+
+  .lang-side {
+    position: static;
+    order: -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .lang-side h2 {
+    width: 100%;
+    margin-bottom: 2px;
+  }
+
+  .lang-item {
+    padding: 5px 10px;
+    border: 1px solid var(--line-strong);
+  }
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 1100px) {

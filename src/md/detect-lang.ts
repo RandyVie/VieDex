@@ -37,9 +37,21 @@ const ALIASES: Record<string, string> = {
   c: 'cpp', cc: 'cpp', 'c++': 'cpp', h: 'cpp', hpp: 'cpp', sass: 'scss',
 };
 
-export function languageLabel(id: string): string {
+/** One id per language, so `ts` and `typescript` count as the same. */
+export function normalizeLanguage(id: string): string {
   const key = id.toLowerCase();
-  return LANGUAGES.find((l) => l.id === (ALIASES[key] ?? key))?.label ?? id;
+  return ALIASES[key] ?? key;
+}
+
+export function languageLabel(id: string): string {
+  const key = normalizeLanguage(id);
+  return LANGUAGES.find((l) => l.id === key)?.label ?? id;
+}
+
+/** The language written after the ``` of a code block, normalized, or '' when it has none. */
+export function codeBlockLanguage(content: string): string {
+  const m = /^\s*```([\w+#.-]+)/.exec(content);
+  return m ? normalizeLanguage(m[1]) : '';
 }
 
 type Rule = [RegExp, number];
