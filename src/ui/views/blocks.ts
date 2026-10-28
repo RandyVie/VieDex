@@ -3,9 +3,12 @@ import { BLOCK_LABEL } from '../../library/layout';
 import { getIndex } from '../../library/library';
 import { BLOCK_TYPES, displayTitle, type BlockType } from '../../md/blocks';
 import { empty } from '../components';
+import { pendingDocs } from './links-found';
 import { h, icon } from '../dom';
 import { blockCard } from '../render-doc';
 import type { View } from './view';
+
+const pendingCount = () => pendingDocs().reduce((n, d) => n + d.urls.length, 0);
 
 /** Every block of one type in the library, each with where it lives and where it is used. */
 export function blocksView(type: BlockType): View {
@@ -27,6 +30,7 @@ export function blocksView(type: BlockType): View {
         h('a', { class: 'btn btn-small push', href: `#/blocks/${type}/new` }, icon('plus'), `New ${label.one.toLowerCase()}`),
       ),
       h('p', { class: 'muted lead' }, `Every ${label.one.toLowerCase()} block in this library, from documents and from the standalone collection.`),
+      type === 'link' && pendingCount() > 0 && h('a', { class: 'notice', href: '#/links-found' }, icon('link'), `${pendingCount()} links in your text are not link blocks yet. Review and convert them.`),
       blocks.length
         ? h('div', { class: `block-grid${type === 'image' ? ' block-grid-images' : ''}` }, blocks.map((b) => blockCard(b, { usage: { homeId: b.fileId }, compact: true })))
         : empty(`No ${label.many.toLowerCase()} yet.`, 'Add one here, or write one inside a document with the Block button.'),

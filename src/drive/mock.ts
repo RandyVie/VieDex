@@ -30,7 +30,7 @@ created: 2026-09-14
 ---
 ## Measure
 
-Keep body text between 60 and 75 characters per line. Wider than that and the eye loses the start of the next line.
+Keep body text between 60 and 75 characters per line (see https://practicaltypography.com/line-length.html). Wider than that and the eye loses the start of the next line.
 
 :::idea ^ms4ur Measure as a token
 Store measure as a design token (\`--measure: 68ch\`) instead of a max-width in pixels.
@@ -78,7 +78,7 @@ title: Rebrand brief
 tags: [rebrand, client]
 created: 2026-08-20
 ---
-Goal: a calmer, more editorial identity. Start from [[Measure and scale]].
+Goal: a calmer, more editorial identity. Start from [[Measure and scale]].\nThe Swiss archive is a good start: https://example.com/swiss-style-archive/ and also www.grid-system.example/history.
 
 :::reference ^rf8br Client interview, 12 Aug
 "We want to look like we have time for our customers."
@@ -113,7 +113,7 @@ https://example.com/swiss-style-archive
 Archive of Swiss style posters.
 :::
 `],
-  ['Design library', '', 'Inbox.md', `Loose page at the library root, outside any book.
+  ['Design library', '', 'Inbox.md', `Loose page at the library root, outside any book. Read https://example.com/why-grids-work later.\n\n\`\`\`\ncurl https://example.com/inside-code-is-ignored\n\`\`\`
 
 :::idea
 This block has no ID yet. Saving this page in the app gives it one.

@@ -1,6 +1,6 @@
 import { drive, type DriveFile } from '../../drive';
 import { getIndex } from '../../library/library';
-import { ConflictError, createDocument, saveDocument, updateBlock } from '../../library/writes';
+import { ConflictError, createDocument, linkifyText, saveDocument, updateBlock } from '../../library/writes';
 import { metaList, metaString, parseDoc, serializeDoc, setMeta, type Doc } from '../../md/frontmatter';
 import { bookName, crumbs, loading } from '../components';
 import { clear, h } from '../dom';
@@ -71,7 +71,8 @@ export function docEditorView(id: string | null, bookId: string | null): View {
       if (tags.value !== initial.tags) setMeta(doc, 'tags', metaList(tags.value));
       if (!existing && !doc.meta.created) setMeta(doc, 'created', today());
       doc.body = segs.markdown();
-      const text = serializeDoc(doc);
+      // Links in the text get a link block after their paragraph (or an embed of an existing one).
+      const { text, count: linked } = linkifyText(serializeDoc(doc));
 
       saving = true;
       saveBtn.disabled = true;
@@ -90,7 +91,7 @@ export function docEditorView(id: string | null, bookId: string | null): View {
         segs.commitEmbeds();
         const entry = existing && loaded ? await saveDocument(existing.id, text, loaded, force) : await createDocument(targetBook, t, text);
         dirty = false;
-        toast('Saved');
+        toast(linked ? `Saved. ${linked === 1 ? '1 link was' : `${linked} links were`} added as link blocks.` : 'Saved');
         go(`/doc/${entry.id}`);
       } catch (err) {
         if (err instanceof ConflictError) {

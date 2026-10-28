@@ -1,8 +1,9 @@
 // Everything the app writes to a library. Each write updates the index right away.
 import { drive, type DriveFile } from '../drive';
-import { blockAsText, blockMarkup, ensureIds, newBlockId, parseBody, replaceBlock, replaceEmbeds, unwrapBlock, type BlockType } from '../md/blocks';
+import { blockAsText, blockMarkup, ensureIds, firstUrl, newBlockId, parseBody, replaceBlock, replaceEmbeds, unwrapBlock, type BlockType } from '../md/blocks';
 import { parseDoc, serializeDoc } from '../md/frontmatter';
-import { blockById, blockIdTaken, usedIn } from './derived';
+import { findUrls, linkify, urlKey, type LinkifyContext } from '../md/linkify';
+import { allBlocks, blockById, blockIdTaken, usedIn, type BlockRef } from './derived';
 import { BLOCKS_FOLDER, COLLECTION_FILE, MEDIA_FOLDER } from './layout';
 import { applyLocalRemove, applyLocalWrite, COLOR_PROPERTY, ensureTopFolder, getIndex, registerFolder } from './library';
 import type { BlockEntry, FileEntry } from './model';
@@ -188,4 +189,65 @@ export async function deleteBlock(id: string): Promise<void> {
     // The home may also embed itself somewhere lower down.
     return out == null ? null : replaceEmbeds(out, id, text);
   });
+}
+
+// --- Links in text ------------------------------------------------------------
+
+const linkUrl = (content: string) => firstUrl(content) ?? findUrls(content)[0] ?? null;
+
+/** Lookups for turning links into link blocks, built from the current index. */
+export function linkContext(): LinkifyContext {
+  const byKey = new Map<string, BlockRef>();
+  for (const b of allBlocks()) {
+    if (b.type !== 'link' || b.synthetic) continue;
+    const url = linkUrl(b.content);
+    if (url && !byKey.has(urlKey(url))) byKey.set(urlKey(url), b);
+  }
+  return {
+    existing: (key) => {
+      const b = byKey.get(key);
+      return b ? { id: b.id, block: b } : null;
+    },
+    keyOfBlock: (id) => {
+      const b = blockById(id);
+      const url = b?.type === 'link' ? linkUrl(b.content) : null;
+      return url ? urlKey(url) : null;
+    },
+    taken: blockIdTaken,
+  };
+}
+
+/** A document's full text with link blocks added after paragraphs that have links. */
+export function linkifyText(text: string): { text: string; count: number } {
+  const doc = parseDoc(text);
+  const r = linkify(doc.body, linkContext());
+  const count = r.created.length + r.embedded.length;
+  if (!count) return { text, count };
+  doc.body = r.body;
+  return { text: serializeDoc(doc), count };
+}
+
+const pendingCache = new WeakMap<FileEntry, string[]>();
+
+/** Links in a document's text that have no link block there yet. Read from the index, no download. */
+export function pendingLinks(f: FileEntry): string[] {
+  if (f.kind !== 'document') return [];
+  let hit = pendingCache.get(f);
+  if (!hit) {
+    const r = linkify(f.text, linkContext());
+    hit = [...r.created, ...r.embedded];
+    pendingCache.set(f, hit);
+  }
+  return hit;
+}
+
+/** Convert the links in one document now. Returns how many got a block. */
+export async function convertLinks(fileId: string): Promise<number> {
+  const f = getIndex()!.files[fileId];
+  if (!f || f.kind !== 'document') return 0;
+  const { text, count } = linkifyText(await drive.readText(fileId));
+  if (!count) return 0;
+  const final = withBlockIds(text);
+  applyLocalWrite(await drive.writeText(fileId, final, f.mimeType || 'text/markdown'), final);
+  return count;
 }

@@ -15,6 +15,7 @@ export type Route =
   | { name: 'file'; id: string }
   | { name: 'search' }
   | { name: 'broken' }
+  | { name: 'links-found' }
   | { name: 'settings' }
   | { name: 'add-library' };
 
@@ -46,6 +47,8 @@ export function parseRoute(hash = location.hash): Route {
       return { name: 'search' };
     case 'broken':
       return { name: 'broken' };
+    case 'links-found':
+      return { name: 'links-found' };
     case 'settings':
       return { name: 'settings' };
     case 'add-library':

@@ -110,6 +110,14 @@ Caption for the image.
 - `![[file name.png]]` inside an image block shows a file from `_media/`.
 - Each block type has a collection view listing every block of that type in the library. Each block shows where it lives and every document (and book) that uses it.
 
+### Links in text
+
+- Anything in normal text starting with `http://`, `https://` or `www.` is a link. Code, blocks, embeds and frontmatter are not scanned.
+- **On save in the app**, each paragraph with links gets a link block right after it. The sentence keeps its link.
+- **One block per URL.** If a link block with that URL already exists anywhere in the library, the document embeds it instead of creating a new one. URLs compare without scheme, `www.` or trailing slash.
+- Converting is repeatable: a link the document already has as a block (its own or embedded) is skipped.
+- Text the app did not save (files edited in Drive) is never rewritten on its own. A "Links to convert" page lists those links, with Convert per document and Convert all.
+
 ### Deleting
 
 - **Deleting a document** moves the file to the Drive trash (never a permanent delete). Every block written in it moves first to its `_blocks/` collection file with the same ID, so embeds elsewhere keep working.
@@ -170,7 +178,7 @@ Archiving (a `link` block with an archived copy) and share target come right aft
 
 Not in MVP. Kept here so they don't get lost.
 
-- [ ] **URL scanner.** Scan a document, a book (EPUB/PDF), a collection, or the whole library and produce a list of every URL found. To be fleshed out: output format (note, table, export), deduplication, grouping by domain, link checking (dead or alive), one-click archive of found URLs.
+- [ ] **URL scanner, next steps.** Links in text already become link blocks (see Links in text). Still open: scanning books (EPUB/PDF), grouping by domain, link checking (dead or alive), one-click archive of found URLs.
 - [ ] **Browser extension** for clipping from the open tab, to fix JS-rendered pages the Apps Script fetcher can't read.
 - [ ] **Syntax highlighting** for code blocks, language filter.
 - [ ] **Boards / moodboards.** Freeform canvas for arranging images and notes, saved as a JSON file in Drive.

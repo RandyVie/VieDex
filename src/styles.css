@@ -2694,6 +2694,87 @@ a.block-title:hover {
   margin-left: auto;
 }
 
+/* --- Links to convert ----------------------------------------------------- */
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -6px 0 20px;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--b-link) 40%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--b-link) 7%, transparent);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.notice .icon {
+  color: var(--b-link);
+}
+
+.notice:hover {
+  border-color: var(--b-link);
+}
+
+.found-list {
+  display: grid;
+  gap: 12px;
+}
+
+.found-doc {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--b-link);
+  border-radius: var(--radius-lg);
+  background: var(--bg-raised);
+}
+
+.found-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px 8px;
+}
+
+.found-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-list-item);
+  font-weight: 600;
+}
+
+.found-title:hover {
+  color: var(--b-link);
+}
+
+.found-urls {
+  list-style: none;
+  margin: 0;
+  padding: 0 14px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.found-urls a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 13px var(--mono);
+  color: var(--b-link);
+}
+
+.found-urls .icon {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 1100px) {

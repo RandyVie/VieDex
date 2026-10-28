@@ -16,6 +16,7 @@ import { docView } from './views/doc';
 import { docEditorView } from './views/doc-editor';
 import { fileView } from './views/file';
 import { homeView } from './views/home';
+import { linksFoundView, pendingDocs } from './views/links-found';
 import { searchView } from './views/search';
 import { settingsView } from './views/settings';
 import { pickRootView } from './views/setup';
@@ -107,6 +108,7 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     const blockCounts = new Map<string, number>();
     for (const b of allBlocks()) blockCounts.set(b.type, (blockCounts.get(b.type) ?? 0) + 1);
     const broken = brokenLinks(index).length;
+    const toConvert = pendingDocs().reduce((n, d) => n + d.urls.length, 0);
     const loose = docs.filter((d) => !d.book).length;
 
     const addBook = h('button', { class: 'icon-btn nav-add', title: 'New book', 'aria-label': 'New book', onclick: newBook }, icon('plus'));
@@ -119,7 +121,9 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
       loose > 0 && link('#/loose', 'Loose pages', loose, h('span', { class: 'book-dot book-dot-loose' })),
       h('div', { class: 'nav-head' }, h('a', { class: 'nav-head-link', href: '#/blocks' }, 'Blocks')),
       BLOCK_TYPES.map((t) => link(`#/blocks/${t}`, BLOCK_LABEL[t].many, blockCounts.get(t) ?? 0, h('span', { class: `swatch swatch-${t}` }))),
-      broken > 0 && [h('div', { class: 'nav-head' }), h('a', { class: 'nav-link nav-warn', href: '#/broken' }, h('span', { class: 'nav-label' }, 'Broken links'), h('span', { class: 'count' }, String(broken)))],
+      (broken > 0 || toConvert > 0) && h('div', { class: 'nav-head' }),
+      toConvert > 0 && h('a', { class: 'nav-link', href: '#/links-found' }, h('span', { class: 'swatch swatch-link' }), h('span', { class: 'nav-label' }, 'Links to convert'), h('span', { class: 'count' }, String(toConvert))),
+      broken > 0 && h('a', { class: 'nav-link nav-warn', href: '#/broken' }, h('span', { class: 'nav-label' }, 'Broken links'), h('span', { class: 'count' }, String(broken))),
     );
     markActive();
   }
@@ -183,6 +187,8 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
         return searchView();
       case 'broken':
         return brokenView();
+      case 'links-found':
+        return linksFoundView();
     }
   }
 
