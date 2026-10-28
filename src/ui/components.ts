@@ -6,7 +6,6 @@ import { getIndex } from '../library/library';
 import type { FileEntry } from '../library/model';
 import { excerpt } from '../library/search';
 import { confirmDeleteDoc } from './actions';
-import { DEFAULT_BOOK_COLOR } from './colors';
 import { formatDate, h, icon } from './dom';
 import { ui } from './ui-state';
 
@@ -163,7 +162,8 @@ export function switchToggle(label: string, checked: boolean, onChange: (on: boo
 
 /** Set a book's color on an element as --book-color. */
 export function paintBook<T extends HTMLElement>(el: T, color?: string): T {
-  el.style.setProperty('--book-color', color ?? DEFAULT_BOOK_COLOR);
+  // Without a color of its own, a book follows the app's accent color.
+  if (color) el.style.setProperty('--book-color', color);
   return el;
 }
 

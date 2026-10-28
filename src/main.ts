@@ -6,7 +6,11 @@ import { closeLibrary, openLibrary } from './library/library';
 import { clear, h } from './ui/dom';
 import { errorText, toast } from './ui/feedback';
 import { mountShell, type LibraryRef } from './ui/shell';
+import { applyAccent, loadAccent } from './ui/theme';
 import { pickRootView, signInView } from './ui/views/setup';
+
+// Before anything renders, so the chosen accent never flashes green first.
+applyAccent(loadAccent());
 
 const LIBS_KEY = 'viedex.libraries';
 const CURRENT_KEY = 'viedex.current';

@@ -33,16 +33,28 @@ export interface ColorField {
   value(): string;
 }
 
+export interface ColorFieldOptions {
+  /** Which recent list to show (books, text and accent each keep their own). */
+  recentKey?: string;
+  suggested?: string[];
+  /** Every change, also while dragging in the system picker. */
+  onChange?: (color: string) => void;
+  /** A finished pick: a swatch click, or closing the system picker. */
+  onPick?: (color: string) => void;
+}
+
 /** Swatches plus a full picker. The chosen color shows as a large preview. */
-export function colorField(initial: string): ColorField {
+export function colorField(initial: string, opts: ColorFieldOptions = {}): ColorField {
   let value = isColor(initial) ? initial.toLowerCase() : DEFAULT_BOOK_COLOR;
   const preview = h('span', { class: 'color-preview' });
   const hex = h('span', { class: 'color-hex' });
   const native = h('input', { type: 'color', class: 'color-native', value, 'aria-label': 'Pick any color' });
   const swatchRows = h('div', { class: 'color-rows' });
 
-  const set = (c: string) => {
+  const set = (c: string, final = false) => {
     value = c.toLowerCase();
+    opts.onChange?.(value);
+    if (final) opts.onPick?.(value);
     preview.style.setProperty('--swatch', value);
     hex.textContent = value;
     native.value = value;
@@ -59,7 +71,7 @@ export function colorField(initial: string): ColorField {
         'div',
         { class: 'color-swatches' },
         colors.map((c) => {
-          const b = h('button', { class: 'color-swatch', type: 'button', 'data-color': c.toLowerCase(), title: c, 'aria-label': `Color ${c}`, onclick: () => set(c) });
+          const b = h('button', { class: 'color-swatch', type: 'button', 'data-color': c.toLowerCase(), title: c, 'aria-label': `Color ${c}`, onclick: () => set(c, true) });
           b.style.setProperty('--swatch', c);
           return b;
         }),
@@ -67,8 +79,9 @@ export function colorField(initial: string): ColorField {
     );
   };
 
-  swatchRows.append(...[row('Recent', recentColors()), row('Suggested', SUGGESTED)].filter((x): x is HTMLDivElement => x !== null));
+  swatchRows.append(...[row('Recent', recentColors(opts.recentKey)), row('Suggested', opts.suggested ?? SUGGESTED)].filter((x): x is HTMLDivElement => x !== null));
   native.addEventListener('input', () => set(native.value));
+  native.addEventListener('change', () => set(native.value, true));
   set(value);
 
   return {

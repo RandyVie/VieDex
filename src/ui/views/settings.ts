@@ -2,8 +2,32 @@ import { config } from '../../config';
 import { getIndex, lastSync, rebuild, refresh } from '../../library/library';
 import { formatTime, h, icon } from '../dom';
 import { confirmDialog, errorText, toast } from '../feedback';
+import { colorField, rememberColor } from '../colors';
 import type { LibraryRef, ShellHost } from '../shell';
+import { ACCENT_RECENT_KEY, DEFAULT_ACCENT, loadAccent, saveAccent } from '../theme';
 import type { View } from './view';
+
+const ACCENT_SUGGESTED = [DEFAULT_ACCENT, '#ffcf5c', '#ff8f6b', '#ff6b9a', '#c49bff', '#8ab4ff', '#5ce0c6', '#e8e9eb'];
+
+function appearance(): HTMLElement {
+  const box = h('div', { class: 'card appearance' });
+  const build = () => {
+    const field = colorField(loadAccent(), {
+      recentKey: ACCENT_RECENT_KEY,
+      suggested: ACCENT_SUGGESTED,
+      onChange: saveAccent,
+      onPick: (c) => rememberColor(c, ACCENT_RECENT_KEY),
+    });
+    const reset = h('button', { class: 'btn btn-small' }, 'Reset to green');
+    reset.addEventListener('click', () => {
+      saveAccent(DEFAULT_ACCENT);
+      build();
+    });
+    box.replaceChildren(field.el, h('div', { class: 'inline' }, reset));
+  };
+  build();
+  return box;
+}
 
 export function settingsView(host: ShellHost): View {
   const index = getIndex();
@@ -51,6 +75,9 @@ export function settingsView(host: ShellHost): View {
       h('p', { class: 'muted' }, 'Each library is one folder in your Drive. Libraries never link to each other.'),
       h('dl', { class: 'card' }, host.libraries.map(libRow)),
       h('div', { class: 'inline spaced' }, h('a', { class: 'btn', href: '#/add-library' }, icon('plus'), 'Add library')),
+      h('h2', { class: 'section-title' }, 'Appearance'),
+      h('p', { class: 'muted' }, 'The accent color for buttons, active items and highlights. Saved on this device.'),
+      appearance(),
       h('h2', { class: 'section-title' }, 'This library'),
       h(
         'dl',

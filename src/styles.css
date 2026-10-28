@@ -15,7 +15,7 @@
   --text-3: #6c7079;
 
   --accent: #c8f560;
-  --accent-dim: rgb(200 245 96 / 0.12);
+  --accent-dim: color-mix(in srgb, var(--accent) 12%, transparent);
   --accent-ink: #0e0f11;
   --warn: #ffb547;
   --danger: #ff6b5e;
@@ -94,7 +94,7 @@ textarea {
 }
 
 ::selection {
-  background: rgb(200 245 96 / 0.3);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 [hidden] {
@@ -164,8 +164,8 @@ textarea {
 }
 
 .btn-primary:hover {
-  background: #d6fa80;
-  border-color: #d6fa80;
+  background: color-mix(in srgb, var(--accent) 82%, white);
+  border-color: color-mix(in srgb, var(--accent) 82%, white);
 }
 
 .btn-danger {
@@ -1088,7 +1088,7 @@ kbd {
 .prose a {
   color: var(--accent);
   text-decoration: underline;
-  text-decoration-color: rgb(200 245 96 / 0.35);
+  text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
   text-underline-offset: 3px;
 }
 
@@ -1617,8 +1617,8 @@ kbd {
   height: 11px;
   flex: none;
   border-radius: 2px;
-  background: color-mix(in srgb, var(--book-color, var(--text-3)) 30%, var(--bg-raised));
-  box-shadow: inset 2px 0 0 var(--book-color, var(--text-3));
+  background: color-mix(in srgb, var(--book-color, var(--accent)) 30%, var(--bg-raised));
+  box-shadow: inset 2px 0 0 var(--book-color, var(--accent));
 }
 
 .book-dot-loose {
@@ -3146,6 +3146,14 @@ a.block-title:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-dim);
+}
+
+/* --- Appearance settings --------------------------------------------------------- */
+
+.appearance {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */
