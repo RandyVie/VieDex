@@ -152,3 +152,10 @@ export function thumb(fileId: string, link: string | undefined | null, px: numbe
   else fallback();
   return img;
 }
+
+/** An on/off switch with a visible label. */
+export function switchToggle(label: string, checked: boolean, onChange: (on: boolean) => void) {
+  const input = h('input', { type: 'checkbox', role: 'switch', class: 'switch-input', checked });
+  input.addEventListener('change', () => onChange(input.checked));
+  return h('label', { class: 'switch' }, input, h('span', { class: 'switch-track', 'aria-hidden': 'true' }), h('span', null, label));
+}

@@ -4,7 +4,7 @@ import { getIndex, onLibraryChange } from '../../library/library';
 import type { FileEntry } from '../../library/model';
 import { displayTitle } from '../../md/blocks';
 import { parseDoc } from '../../md/frontmatter';
-import { blockBadge, crumbs, docBadge, empty, loading, placeOf, tagChips } from '../components';
+import { blockBadge, crumbs, docBadge, empty, loading, placeOf, switchToggle, tagChips } from '../components';
 import { clear, formatDate, h, icon } from '../dom';
 import { errorText } from '../feedback';
 import { confirmDeleteDoc } from '../actions';
@@ -47,11 +47,32 @@ function side(f: FileEntry) {
   );
 }
 
+// A reading preference for this device only; it never changes the file.
+const SHOW_BLOCKS_KEY = 'viedex.showBlocks';
+
+function loadShowBlocks(): boolean {
+  try {
+    return localStorage.getItem(SHOW_BLOCKS_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function saveShowBlocks(on: boolean) {
+  try {
+    localStorage.setItem(SHOW_BLOCKS_KEY, on ? 'on' : 'off');
+  } catch {
+    // Storage blocked: the choice lasts until the page reloads.
+  }
+}
+
+let showBlocks = loadShowBlocks();
+
 export function docView(id: string): View {
   let f = getIndex()!.files[id];
   if (!f) return { live: true, el: h('section', { class: 'view' }, empty('Document not found.', 'It may have been moved or deleted in Drive.')) };
 
-  const body = h('div', { class: 'item-body' }, loading());
+  const body = h('div', { class: `item-body${showBlocks ? '' : ' blocks-plain'}` }, loading());
   const head = () =>
     h(
       'header',
@@ -64,6 +85,11 @@ export function docView(id: string): View {
         { class: 'item-actions' },
         h('a', { class: 'btn btn-primary btn-small', href: `#/doc/${f.id}/edit` }, 'Edit'),
         h('a', { class: 'btn btn-small', href: `https://drive.google.com/file/d/${f.id}/view`, target: '_blank', rel: 'noopener noreferrer' }, icon('external'), 'Open in Drive'),
+        switchToggle('Show blocks', showBlocks, (on) => {
+          showBlocks = on;
+          saveShowBlocks(on);
+          body.classList.toggle('blocks-plain', !on);
+        }),
         h(
           'button',
           {
