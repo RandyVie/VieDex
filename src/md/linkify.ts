@@ -1,12 +1,12 @@
 // Finds web links in normal text and adds a link block after each paragraph that has one.
 // The sentence keeps its link; code, blocks, embeds and frontmatter are never touched.
-import { blockMarkup, cleanUrl, embedCode, firstUrl, hrefOf, LINK_SOURCE, newBlockId, parseBody, type ParsedBlock } from './blocks';
+import { blockMarkup, cleanUrl, OPEN_WORDS, embedCode, firstUrl, hrefOf, LINK_SOURCE, newBlockId, parseBody, type ParsedBlock } from './blocks';
 
 export { cleanUrl };
 
 const URL_RE = new RegExp(LINK_SOURCE, 'gi');
 const FENCE_RE = /^[ \t]*(```|~~~)/;
-const OPEN_RE = /^:::(idea|list|link|code|image|reference)\b/i;
+const OPEN_RE = new RegExp(`^:::(${OPEN_WORDS})\\b`, 'i');
 const CLOSE_RE = /^:::[ \t]*$/;
 const EMBED_RE = /^[ \t]*!\[\[[^\]\n]+\]\][ \t]*$/;
 

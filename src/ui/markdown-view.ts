@@ -3,13 +3,13 @@
 // edits to it are saved to the block's own file, like edits in the Write tab.
 import { blockById, blockIdTaken } from '../library/derived';
 import { BLOCK_LABEL } from '../library/layout';
-import { blockMarkup, embedCode, newBlockId, type BlockType } from '../md/blocks';
+import { blockMarkup, embedCode, newBlockId, OPEN_WORDS, type BlockType } from '../md/blocks';
 import { autoGrow } from './block-fields';
 import { clear, h } from './dom';
 
 const EMBED_RE = /^[ \t]*!\[\[\^([^\]|\n]+)(?:\|[^\]\n]*)?\]\][ \t]*$/;
 const FENCE_RE = /^[ \t]*(```|~~~)/;
-const OPEN_RE = /^:::(idea|list|link|code|image|reference)\b/i;
+const OPEN_RE = new RegExp(`^:::(${OPEN_WORDS})\\b`, 'i');
 const CLOSE_RE = /^:::[ \t]*$/;
 
 type Chunk = { kind: 'text'; area: HTMLTextAreaElement } | { kind: 'embed'; line: string };

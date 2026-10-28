@@ -33,9 +33,8 @@ function area(value: string, placeholder: string, cls = 'field-area') {
 }
 
 const PLACEHOLDER: Partial<Record<BlockType, string>> = {
-  idea: 'The idea, in a sentence or a few.',
+  note: 'Write a note: a thought, a quote, a source.',
   list: '- First item\n- Second item',
-  reference: 'A quote, a source, a citation.',
 };
 
 export function blockFields(type: BlockType, content: string, onChange: () => void): Fields {

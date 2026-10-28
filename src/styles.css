@@ -21,12 +21,11 @@
   --danger: #ff6b5e;
 
   /* One color per block type, used for badges, card edges and swatches. */
-  --b-idea: #ffcf5c;
+  --b-note: #ffcf5c;
   --b-list: #8ab4ff;
   --b-link: #5ce0c6;
   --b-code: #ff8fb1;
   --b-image: #c8f560;
-  --b-reference: #c49bff;
   --b-doc: #a4a8b0;
 
   --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -684,12 +683,11 @@ kbd {
   background: color-mix(in srgb, var(--tc, var(--text-2)) 13%, transparent);
 }
 
-.badge-idea, .block-idea, .swatch-idea, .dot-idea { --tc: var(--b-idea); }
+.badge-note, .block-note, .swatch-note, .dot-note { --tc: var(--b-note); }
 .badge-list, .block-list, .swatch-list, .dot-list { --tc: var(--b-list); }
 .badge-link, .block-link, .swatch-link, .dot-link { --tc: var(--b-link); }
 .badge-code, .block-code, .swatch-code, .dot-code { --tc: var(--b-code); }
 .badge-image, .block-image, .swatch-image, .dot-image { --tc: var(--b-image); }
-.badge-reference, .block-reference, .swatch-reference, .dot-reference { --tc: var(--b-reference); }
 .badge-doc, .badge-file { --tc: var(--b-doc); }
 .badge-warn { --tc: var(--warn); }
 

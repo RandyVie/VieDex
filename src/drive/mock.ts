@@ -32,7 +32,7 @@ created: 2026-09-14
 
 Keep body text between 60 and 75 characters per line (see https://practicaltypography.com/line-length.html). Wider than that and the eye loses the start of the next line.
 
-:::idea ^ms4ur Measure as a token
+:::note ^ms4ur Measure as a token
 Store measure as a design token (\`--measure: 68ch\`) instead of a max-width in pixels.
 :::
 
@@ -115,15 +115,15 @@ Archive of Swiss style posters.
 `],
   ['Design library', '', 'Inbox.md', `Loose page at the library root, outside any book. Read https://example.com/why-grids-work later.\n\n\`\`\`\ncurl https://example.com/inside-code-is-ignored\n\`\`\`
 
-:::idea
+:::note
 This block has no ID yet. Saving this page in the app gives it one.
 :::
 `],
-  ['Design library', '_blocks', 'ideas.md', `:::idea ^id3a1 Numerals as image
+  ['Design library', '_blocks', 'notes.md', `:::note ^id3a1 Numerals as image
 Big grotesk numerals on dark backgrounds, used as the main visual.
 :::
 
-:::idea ^id7q2
+:::note ^id7q2
 A colophon page in every document that lists the typefaces used.
 :::
 `],

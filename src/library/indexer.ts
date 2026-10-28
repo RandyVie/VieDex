@@ -33,7 +33,10 @@ function kindOf(f: Pick<DriveFile, 'name' | 'mimeType'>, top: Folder | null): Fi
 
 function collectionTitle(name: string): string {
   const entry = Object.entries(COLLECTION_FILE).find(([, file]) => file === name.toLowerCase());
-  return entry ? `${BLOCK_LABEL[entry[0] as keyof typeof BLOCK_LABEL].many} collection` : stripExt(name);
+  if (entry) return `${BLOCK_LABEL[entry[0] as keyof typeof BLOCK_LABEL].many} collection`;
+  // Older collection files (ideas.md, references.md) hold notes now but keep their name.
+  const base = stripExt(name);
+  return `${base.charAt(0).toUpperCase()}${base.slice(1)} collection`;
 }
 
 export function buildFile(f: DriveFile, text: string | null, ctx: IndexContext, prev?: FileEntry): FileEntry {

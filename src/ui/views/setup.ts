@@ -36,7 +36,7 @@ export function signInView(): HTMLElement {
     'main',
     { class: 'setup' },
     brand(),
-    h('h1', null, 'Your books, documents and ideas, kept in Google Drive.'),
+    h('h1', null, 'Your books, documents and notes, kept in Google Drive.'),
     h('p', null, 'Each library is a folder in your Drive. Edit there or here, both stay in sync.'),
     button,
     note,

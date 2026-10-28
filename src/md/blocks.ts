@@ -1,12 +1,18 @@
 // Blocks are fenced sections inside Markdown:
 //
-//   :::idea ^b7f3 Optional title
+//   :::note ^b7f3 Optional title
 //   content
 //   :::
 //
 // and `![[^b7f3]]` on its own line shows a block that lives elsewhere.
 
-export const BLOCK_TYPES = ['idea', 'list', 'link', 'code', 'image', 'reference'] as const;
+export const BLOCK_TYPES = ['note', 'list', 'link', 'code', 'image'] as const;
+
+/** Types that existed before and are read as notes. The app writes them back as `:::note`. */
+const LEGACY_TYPES: Record<string, BlockType> = { idea: 'note', reference: 'note' };
+
+/** Every word that opens a block, current and legacy, for patterns elsewhere. */
+export const OPEN_WORDS = [...BLOCK_TYPES, ...Object.keys(LEGACY_TYPES)].join('|');
 export type BlockType = (typeof BLOCK_TYPES)[number];
 
 export interface ParsedBlock {
@@ -24,7 +30,7 @@ export type Segment =
   | { kind: 'block'; block: ParsedBlock }
   | { kind: 'embed'; target: string; label: string };
 
-const OPEN_RE = /^:::(idea|list|link|code|image|reference)(?:[ \t]+\^([A-Za-z0-9_-]+))?(?:[ \t]+(.*?))?[ \t]*$/i;
+const OPEN_RE = new RegExp(`^:::(${OPEN_WORDS})(?:[ \\t]+\\^([A-Za-z0-9_-]+))?(?:[ \\t]+(.*?))?[ \\t]*$`, 'i');
 const CLOSE_RE = /^:::[ \t]*$/;
 const EMBED_RE = /^[ \t]*!\[\[([^\]\n]+)\]\][ \t]*$/;
 const FENCE_RE = /^[ \t]*(```|~~~)/;
@@ -72,7 +78,7 @@ export function parseBody(body: string): Segment[] {
       out.push({
         kind: 'block',
         block: {
-          type: open[1].toLowerCase() as BlockType,
+          type: LEGACY_TYPES[open[1].toLowerCase()] ?? (open[1].toLowerCase() as BlockType),
           id: open[2] ?? null,
           title: (open[3] ?? '').trim(),
           content: content.join('\n').replace(/^\n+|\n+$/g, ''),
