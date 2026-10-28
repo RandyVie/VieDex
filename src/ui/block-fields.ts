@@ -2,6 +2,7 @@
 // line or `![[file]]` by hand. Each returns the block content as Markdown.
 import { mediaByName } from '../library/derived';
 import { firstUrl, mediaRefs, type BlockType } from '../md/blocks';
+import { detectLanguage, LANGUAGES, languageLabel } from '../md/detect-lang';
 import { clear, h, icon } from './dom';
 import { mediaImage } from './media';
 import { pickMedia } from './pickers';
@@ -77,8 +78,35 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
 
   if (type === 'code') {
     const m = FENCE_RE.exec(content.trim());
-    const lang = h('input', { class: 'field-lang', placeholder: 'language', value: m ? m[1] : '', 'aria-label': 'Language' });
+    // A list to pick from, but any language can still be typed.
+    const listId = `langs-${Math.random().toString(36).slice(2, 8)}`;
+    const lang = h('input', { class: 'field-lang', placeholder: 'Language (auto)', value: m ? m[1] : '', 'aria-label': 'Language', list: listId, autocomplete: 'off' });
+    const list = h('datalist', { id: listId }, LANGUAGES.map((l) => h('option', { value: l.id }, l.label)));
+    const hint = h('span', { class: 'field-lang-hint', hidden: true }, 'detected');
     const code = area(m ? m[2] : content, 'Paste or write code', 'field-area field-code');
+    // Detect while the field is empty or was filled by detection; a language set by hand stays.
+    let auto = !lang.value.trim();
+    const detect = () => {
+      if (!auto) return;
+      const found = detectLanguage(code.value);
+      lang.value = found ?? '';
+      hint.hidden = !found;
+      hint.textContent = found ? `detected: ${languageLabel(found)}` : '';
+    };
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    code.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        detect();
+        onChange();
+      }, 250);
+    });
+    lang.addEventListener('input', () => {
+      auto = !lang.value.trim();
+      hint.hidden = true;
+      if (auto) detect();
+    });
+    if (auto && code.value.trim()) detect();
     code.addEventListener('keydown', (e) => {
       if (e.key !== 'Tab' || e.shiftKey) return;
       e.preventDefault();
@@ -87,7 +115,7 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
     });
     [lang, code].forEach((el) => el.addEventListener('input', onChange));
     return {
-      el: h('div', { class: 'fields' }, lang, code),
+      el: h('div', { class: 'fields' }, h('div', { class: 'field-lang-row' }, lang, list, hint), code),
       value: () => `\`\`\`${lang.value.trim()}\n${code.value.replace(/\n+$/, '')}\n\`\`\``,
       focus: () => code.focus(),
     };

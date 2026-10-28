@@ -109,6 +109,7 @@ Caption for the image.
 - `^id` is a short ID, unique within the library. The app adds IDs to blocks that lack one when it saves a file.
 - **One source.** Every block lives in exactly one file: the document it was written in, or its `_blocks/` collection file when created on its own. `![[^id]]` on its own line shows a block from elsewhere. The app writes it as `![[^id|Block title]]` so the raw file reads well; only the ID counts, the label is refreshed on every save. Editing an embedded block edits its source.
 - `![[file name.png]]` inside an image block shows a file from `_media/`.
+- A code block stores its language after the fence (```` ```css ````). While the language is empty the editor guesses it from the code with plain rules (`src/md/detect-lang.ts`); a language picked or typed by hand is never overwritten.
 - Each block type has a collection view listing every block of that type in the library. Each block shows where it lives and every document (and book) that uses it.
 
 ### Text formatting
