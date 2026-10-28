@@ -1,5 +1,5 @@
 import { getIndex } from '../../library/library';
-import { createBook, setBookColor } from '../../library/writes';
+import { createBook, updateBook } from '../../library/writes';
 import { bookCard, bookStats, docRow, empty, paintBook } from '../components';
 import { h, icon } from '../dom';
 import { errorText, toast } from '../feedback';
@@ -17,11 +17,13 @@ export async function newBook() {
   }
 }
 
-async function changeColor(id: string, color?: string) {
-  const picked = await bookDialog({ title: 'Book color', okLabel: 'Save color', color, askName: false });
+async function editBook(id: string) {
+  const book = getIndex()!.folders[id];
+  const picked = await bookDialog({ title: 'Edit book', okLabel: 'Save', name: book.name, color: book.color, askName: true });
   if (!picked) return;
   try {
-    await setBookColor(id, picked.color);
+    await updateBook(id, picked.name, picked.color);
+    toast('Book saved');
   } catch (err) {
     toast(errorText(err), 'error');
   }
@@ -47,10 +49,11 @@ export function bookView(id: string): View {
       h(
         'header',
         { class: 'view-head' },
-        h('button', { class: 'book-swatch', type: 'button', title: 'Change book color', 'aria-label': 'Change book color', onclick: () => changeColor(id, book.color) }),
+        h('button', { class: 'book-swatch', type: 'button', title: 'Edit name and color', 'aria-label': 'Edit book name and color', onclick: () => editBook(id) }),
         h('h1', null, book.name),
         h('span', { class: 'count' }, String(docs.length)),
-        h('a', { class: 'btn btn-small push', href: `#/new-doc/${id}` }, icon('plus'), 'New document'),
+        h('button', { class: 'btn btn-small push', onclick: () => editBook(id) }, 'Edit book'),
+        h('a', { class: 'btn btn-small', href: `#/new-doc/${id}` }, icon('plus'), 'New document'),
       ),
       docs.length ? h('div', { class: 'rows' }, docs.map((f) => docRow(f))) : empty('This book is empty.', 'Add a document, or drop Markdown files into its folder in Drive.'),
       others.length > 0 && [h('h2', { class: 'section-title' }, 'Other files'), h('div', { class: 'rows' }, others.map((f) => docRow(f)))],

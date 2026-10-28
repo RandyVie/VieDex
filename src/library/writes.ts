@@ -35,16 +35,27 @@ export function withBlockIds(text: string): string {
 /** Book color on the folder: exact for VieDex, and Drive's own folder color (Drive snaps it to its palette). */
 const colorExtra = (color: string) => ({ properties: { [COLOR_PROPERTY]: color }, folderColorRgb: color });
 
-export async function setBookColor(id: string, color: string): Promise<void> {
-  registerFolder(await drive.updateFolder(id, colorExtra(color)));
+/** A usable book name: no characters Drive or the app trip over, no leading _ (reserved folders). */
+function bookName(name: string, exceptId?: string): string {
+  const idx = getIndex()!;
+  const clean = safeName(name).replace(/^_+/, '').trim();
+  if (!clean) throw new Error('Give the book a name.');
+  if (Object.values(idx.folders).some((f) => f.id !== exceptId && f.parent === idx.rootId && f.name.toLowerCase() === clean.toLowerCase())) {
+    throw new Error('A book with that name already exists.');
+  }
+  return clean;
+}
+
+/** Rename a book and/or change its color. Renaming renames its folder in Drive. */
+export async function updateBook(id: string, name: string, color: string): Promise<void> {
+  const current = getIndex()!.folders[id];
+  const clean = bookName(name, id);
+  registerFolder(await drive.updateFolder(id, { ...(clean !== current?.name ? { name: clean } : {}), ...colorExtra(color) }));
 }
 
 export async function createBook(name: string, color?: string): Promise<string> {
   const idx = getIndex()!;
-  const clean = safeName(name).replace(/^_+/, '');
-  if (Object.values(idx.folders).some((f) => f.parent === idx.rootId && f.name.toLowerCase() === clean.toLowerCase())) {
-    throw new Error('A book with that name already exists.');
-  }
+  const clean = bookName(name);
   const f = await drive.createFolder(idx.rootId, clean, color ? colorExtra(color) : undefined);
   registerFolder(f);
   return f.id;

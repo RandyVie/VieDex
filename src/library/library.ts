@@ -321,6 +321,7 @@ export function applyLocalRemove(id: string) {
 export function registerFolder(f: DriveFile) {
   index!.folders[f.id] = folderEntry(f, f.parents?.[0] ?? index!.rootId);
   emit();
+  persistSoon();
 }
 
 /** A folder directly under the root, created when missing. */

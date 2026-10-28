@@ -29,6 +29,7 @@ export interface ChangePage {
 /** Raw Drive access, no root checks. Only `src/drive/index.ts` may use it. */
 /** Folder metadata the app sets: its own properties, and Drive's folder color. */
 export interface FolderExtra {
+  name?: string;
   properties?: Record<string, string>;
   folderColorRgb?: string;
 }

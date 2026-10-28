@@ -259,8 +259,9 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
       log[log.length - 1] = { fileId: n.id, removed: false, file: pub(n) };
       return wait(pub(n));
     },
-    updateFolder(id: string, extra: { properties?: Record<string, string>; folderColorRgb?: string }) {
+    updateFolder(id: string, extra: { name?: string; properties?: Record<string, string>; folderColorRgb?: string }) {
       const n = get(id);
+      if (extra.name) n.name = extra.name;
       n.properties = { ...n.properties, ...extra.properties };
       if (extra.folderColorRgb) n.folderColorRgb = extra.folderColorRgb;
       touch(n);
