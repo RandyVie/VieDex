@@ -1,8 +1,9 @@
 import { drive } from '../../drive';
-import { backlinksOf, blockById, related } from '../../library/derived';
+import { allBlocks, backlinksOf, blockById, related } from '../../library/derived';
 import { getIndex, onLibraryChange } from '../../library/library';
 import type { FileEntry } from '../../library/model';
-import { displayTitle } from '../../md/blocks';
+import { displayTitle, firstUrl, hrefOf } from '../../md/blocks';
+import { findUrls, urlKey } from '../../md/linkify';
 import { parseDoc } from '../../md/frontmatter';
 import { blockBadge, crumbs, docBadge, empty, loading, placeOf, switchToggle, tagChips } from '../components';
 import { clear, formatDate, h, icon } from '../dom';
@@ -11,6 +12,34 @@ import { confirmDeleteDoc } from '../actions';
 import { renderDocument } from '../render-doc';
 import { go } from '../router';
 import type { View } from './view';
+
+/** Every link in a document once: from its text, its own link blocks and embedded ones. Code is skipped. */
+function documentLinks(f: FileEntry): Array<{ url: string; blockId: string | null }> {
+  const seen = new Map<string, { url: string; blockId: string | null }>();
+  const add = (url: string, blockId: string | null = null) => {
+    const key = urlKey(url);
+    const had = seen.get(key);
+    if (!had) seen.set(key, { url, blockId });
+    else if (!had.blockId && blockId) had.blockId = blockId;
+  };
+  let fence = false;
+  for (const line of f.text.split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) fence = !fence;
+    else if (!fence) findUrls(line).forEach((u) => add(u));
+  }
+  for (const id of f.embeds) {
+    const b = blockById(id);
+    const url = b?.type === 'link' ? firstUrl(b.content) : null;
+    if (url) add(url, id);
+  }
+  // Point each link at its link block when there is one.
+  const blocks = new Map<string, string>();
+  for (const b of allBlocks()) {
+    const url = b.type === 'link' && !b.synthetic ? firstUrl(b.content) : null;
+    if (url && !blocks.has(urlKey(url))) blocks.set(urlKey(url), b.id);
+  }
+  return [...seen.values()].map((l) => ({ ...l, blockId: l.blockId ?? blocks.get(urlKey(l.url)) ?? null }));
+}
 
 function side(f: FileEntry) {
   const index = getIndex()!;
@@ -28,12 +57,30 @@ function side(f: FileEntry) {
   const missingLinks = f.links.filter((_, i) => !f.linkIds[i]);
   const missingEmbeds = f.embeds.filter((id) => !blockById(id));
   const rel = related(index, f.id);
+  const links = documentLinks(f);
 
   return h(
     'aside',
     { class: 'item-side' },
     section('Blocks here', f.blocks.length, h('ul', { class: 'side-list' }, f.blocks.map(block)), 'No blocks written in this document.'),
     section('Embedded', embedded.length, h('ul', { class: 'side-list' }, embedded.map(block)), 'No blocks from elsewhere.'),
+    section(
+      'Links',
+      links.length,
+      h(
+        'ul',
+        { class: 'side-list side-links' },
+        links.map((l) =>
+          h(
+            'li',
+            null,
+            l.blockId ? h('a', { class: 'side-link-block', href: `#/block/${encodeURIComponent(l.blockId)}`, title: 'Open the link block' }, blockBadge('link')) : h('span', { class: 'side-link-block' }),
+            h('a', { class: 'side-link-url', href: hrefOf(l.url), target: '_blank', rel: 'noopener noreferrer', title: l.url }, l.url.replace(/^[a-z]+:\/\//i, '')),
+          ),
+        ),
+      ),
+      'No links in this document.',
+    ),
     section('Backlinks', backs.length, h('ul', { class: 'side-list' }, backs.map(docLink)), 'Nothing links here yet.'),
     missingLinks.length + missingEmbeds.length > 0 &&
       section(
