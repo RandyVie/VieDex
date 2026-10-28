@@ -115,7 +115,7 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
       h('div', { class: 'nav-head' }, h('span', null, 'Books'), addBook),
       books.map((b) => link(`#/book/${b.id}`, b.name, docs.filter((d) => d.book === b.id).length, h('span', { class: 'book-dot' }))),
       !books.length && h('p', { class: 'nav-empty' }, 'No books yet.'),
-      loose > 0 && link('#/', 'Loose pages', loose, h('span', { class: 'book-dot book-dot-loose' })),
+      loose > 0 && link('#/loose', 'Loose pages', loose, h('span', { class: 'book-dot book-dot-loose' })),
       h('div', { class: 'nav-head' }, h('span', null, 'Blocks')),
       BLOCK_TYPES.map((t) => link(`#/blocks/${t}`, BLOCK_LABEL[t].many, blockCounts.get(t) ?? 0, h('span', { class: `swatch swatch-${t}` }))),
       broken > 0 && [h('div', { class: 'nav-head' }), h('a', { class: 'nav-link nav-warn', href: '#/broken' }, h('span', { class: 'nav-label' }, 'Broken links'), h('span', { class: 'count' }, String(broken)))],
@@ -155,7 +155,7 @@ export function mountShell(root: HTMLElement, host: ShellHost): () => void {
     if (!getIndex()) return homeView();
     switch (r.name) {
       case 'home':
-        return homeView();
+        return homeView(r.focus);
       case 'book':
         return bookView(r.id);
       case 'doc':

@@ -1,7 +1,7 @@
 import { isBlockType, type BlockType } from '../md/blocks';
 
 export type Route =
-  | { name: 'home' }
+  | { name: 'home'; focus?: 'loose' }
   | { name: 'book'; id: string }
   | { name: 'doc'; id: string }
   | { name: 'edit-doc'; id: string }
@@ -45,6 +45,8 @@ export function parseRoute(hash = location.hash): Route {
       return { name: 'settings' };
     case 'add-library':
       return { name: 'add-library' };
+    case 'loose':
+      return { name: 'home', focus: 'loose' };
   }
   return { name: 'home' };
 }
