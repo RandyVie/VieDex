@@ -3,24 +3,26 @@ import { h, icon } from './dom';
 
 export const DEFAULT_BOOK_COLOR = '#c8f560';
 const RECENT_KEY = 'viedex.recentColors';
+/** Text colors have their own recent list, apart from book colors. */
+export const TEXT_RECENT_KEY = 'viedex.recentTextColors';
 const MAX_RECENT = 10;
 const SUGGESTED = ['#c8f560', '#ffcf5c', '#ff8f6b', '#ff6b9a', '#c49bff', '#8ab4ff', '#5ce0c6', '#a4a8b0'];
 
 export const isColor = (c: string) => /^#[0-9a-f]{6}$/i.test(c);
 
-export function recentColors(): string[] {
+export function recentColors(key = RECENT_KEY): string[] {
   try {
-    const list = JSON.parse(localStorage.getItem(RECENT_KEY) ?? '[]');
+    const list = JSON.parse(localStorage.getItem(key) ?? '[]');
     return Array.isArray(list) ? list.filter((c) => typeof c === 'string' && isColor(c)) : [];
   } catch {
     return [];
   }
 }
 
-export function rememberColor(color: string) {
+export function rememberColor(color: string, key = RECENT_KEY) {
   const c = color.toLowerCase();
   try {
-    localStorage.setItem(RECENT_KEY, JSON.stringify([c, ...recentColors().filter((x) => x.toLowerCase() !== c)].slice(0, MAX_RECENT)));
+    localStorage.setItem(key, JSON.stringify([c, ...recentColors(key).filter((x) => x.toLowerCase() !== c)].slice(0, MAX_RECENT)));
   } catch {
     // Storage blocked: recent colors just won't be remembered.
   }

@@ -2971,33 +2971,45 @@ a.block-title:hover {
 }
 
 .fmt-colors {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  padding: 8px;
+  display: grid;
+  gap: 10px;
+  width: 248px;
+  padding: 12px;
 }
 
-.fmt-swatch {
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
+.fmt-colors .color-swatches {
+  gap: 6px;
+}
+
+.fmt-colors .color-swatch {
+  width: 24px;
+  height: 24px;
+}
+
+.fmt-color-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.fmt-any {
+  position: relative;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-.fmt-swatch:hover {
-  transform: scale(1.12);
+.fmt-any:hover {
+  color: var(--text);
 }
 
-.color-swatch-red { background: var(--tx-red); }
-.color-swatch-orange { background: var(--tx-orange); }
-.color-swatch-yellow { background: var(--tx-yellow); }
-.color-swatch-green { background: var(--tx-green); }
-.color-swatch-blue { background: var(--tx-blue); }
-.color-swatch-purple { background: var(--tx-purple); }
-.color-swatch-gray { background: var(--tx-gray); }
 
 .fmt-none {
   margin-left: 4px;

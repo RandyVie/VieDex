@@ -32,6 +32,12 @@ function safeUrl(value: string, forImage: boolean): boolean {
   return /^(https?|mailto):/i.test(v);
 }
 
+/** `color: #abc` or `color: #aabbcc`, and nothing else, from a style attribute. */
+export function textColorOf(style: string | null): string | null {
+  const m = /^\s*color\s*:\s*(#[0-9a-f]{3}|#[0-9a-f]{6})\s*;?\s*$/i.exec(style ?? '');
+  return m ? m[1].toLowerCase() : null;
+}
+
 function clean(node: Node, out: Document): Node | null {
   if (node.nodeType === Node.TEXT_NODE) return out.createTextNode(node.textContent ?? '');
   if (node.nodeType !== Node.ELEMENT_NODE) return null;
@@ -61,6 +67,11 @@ function clean(node: Node, out: Document): Node | null {
     copy.setAttribute(name, attr.value);
   }
   if (tag === 'input') copy.setAttribute('disabled', '');
+  if (tag === 'span') {
+    // Text color is the one style kept: a plain hex color, applied through CSSOM.
+    const color = textColorOf(el.getAttribute('style'));
+    if (color) copy.style.color = color;
+  }
   copy.append(kids());
   return copy;
 }

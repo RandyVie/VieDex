@@ -15,6 +15,15 @@ export interface RichField {
 
 class Unsupported extends Error {}
 
+/** "rgb(255, 136, 0)" (how the browser reports a color) as "#ff8800". */
+export function toHex(css: string): string | null {
+  if (/^#[0-9a-f]{6}$/i.test(css)) return css.toLowerCase();
+  const m = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/i.exec(css);
+  return m ? `#${m.slice(1, 4).map((n) => Number(n).toString(16).padStart(2, '0')).join('')}` : null;
+}
+
+const isColorSpan = (el: Element) => el.tagName === 'SPAN' && ([...el.classList].some((c) => TEXT_COLOR_RE.test(c)) || !!(el as HTMLElement).style.color);
+
 const BLOCK = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'UL', 'OL', 'BLOCKQUOTE', 'PRE', 'HR', 'TABLE', 'FIGURE']);
 
 // --- HTML to Markdown ----------------------------------------------------------
@@ -73,8 +82,10 @@ function inlineNode(n: Node): string {
     case 'SMALL':
       return `<small>${inline(el)}</small>`;
     case 'SPAN': {
-      const color = [...el.classList].find((c) => TEXT_COLOR_RE.test(c));
-      return color ? `<span class="${color}">${inline(el)}</span>` : inline(el);
+      const named = [...el.classList].find((c) => TEXT_COLOR_RE.test(c));
+      if (named) return `<span class="${named}">${inline(el)}</span>`;
+      const hex = el.style.color ? toHex(el.style.color) : null;
+      return hex ? `<span style="color: ${hex}">${inline(el)}</span>` : inline(el);
     }
     case 'A': {
       const target = el.dataset.wikilink;
@@ -320,25 +331,28 @@ export function richItalic() {
   document.execCommand('italic');
 }
 
-/** Color the selection, or remove color with null. */
+/** Color the selection with a hex color, or remove color with null. */
 export function richColor(rich: HTMLElement, color: string | null) {
   const sel = getSelection();
   if (!sel?.rangeCount) return;
   const range = sel.getRangeAt(0);
   // Inside one colored span with nothing selected: change or remove that span.
-  const holder = (range.commonAncestorContainer instanceof HTMLElement ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement)?.closest<HTMLElement>('span[class^="color-"]');
-  if (holder && rich.contains(holder) && (range.collapsed || holder.textContent === range.toString())) {
-    if (color) holder.className = `color-${color}`;
-    else holder.replaceWith(...Array.from(holder.childNodes));
+  let holder = range.commonAncestorContainer instanceof HTMLElement ? range.commonAncestorContainer : range.commonAncestorContainer.parentElement;
+  while (holder && holder !== rich && !isColorSpan(holder)) holder = holder.parentElement;
+  if (holder && holder !== rich && (range.collapsed || holder.textContent === range.toString())) {
+    if (color) {
+      holder.removeAttribute('class');
+      holder.style.color = color;
+    } else holder.replaceWith(...Array.from(holder.childNodes));
     changed(rich);
     return;
   }
   if (range.collapsed) return;
   const frag = range.extractContents();
-  frag.querySelectorAll('span[class^="color-"]').forEach((s) => s.replaceWith(...Array.from(s.childNodes)));
+  frag.querySelectorAll('span').forEach((s) => isColorSpan(s) && s.replaceWith(...Array.from(s.childNodes)));
   if (color) {
     const span = document.createElement('span');
-    span.className = `color-${color}`;
+    span.style.color = color;
     span.append(frag);
     range.insertNode(span);
     sel.removeAllRanges();

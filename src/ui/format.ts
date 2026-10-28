@@ -1,10 +1,11 @@
-// Text formatting for the editors. Everything is written as plain Markdown, plus a
-// whitelisted <span class="color-…"> for colors, so files stay readable in Drive.
+// Text formatting for the editors. Everything is written as plain Markdown, plus
+// <span style="color: #hex"> for colors (older files may use <span class="color-…">).
+import { isColor, recentColors, rememberColor, TEXT_RECENT_KEY } from './colors';
 import { h } from './dom';
 import { activeRich, richBold, richColor, richItalic, richSize } from './rich';
 
-export const TEXT_COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'gray'] as const;
-export type TextColor = (typeof TEXT_COLORS)[number];
+/** The colors offered first; they match the named colors of older files. */
+const SUGGESTED_TEXT = ['#ff7a6e', '#ffa45c', '#ffd55c', '#8be08b', '#7fb2ff', '#c49bff', '#8b9099'];
 
 /** Text fields formatting applies to. Code fields are left alone. */
 const FORMATTABLE = '.seg-text, .field-area:not(.field-code), .md-chunk, .md-embed-content, .editor-body';
@@ -74,30 +75,27 @@ export function stepSize(area: HTMLTextAreaElement, dir: 1 | -1) {
   edit(area, start, end, text, start, start + text.length);
 }
 
-const COLOR_SPAN = /^<span class="color-([a-z]+)">([\s\S]*)<\/span>$/;
+const COLOR_SPAN = /^<span (?:class="color-[a-z]+"|style="color: ?#[0-9a-f]{3,6};?")>([\s\S]*)<\/span>$/i;
+const OPEN_TAG = /<span (?:class="color-[a-z]+"|style="color: ?#[0-9a-f]{3,6};?")>$/i;
 
-/** Color the selection, change its color, or remove it with null. */
-export function setColor(area: HTMLTextAreaElement, color: TextColor | null) {
+/** Color the selection with a hex color, change its color, or remove it with null. */
+export function setColor(area: HTMLTextAreaElement, color: string | null) {
   const { selectionStart: s, selectionEnd: e, value } = area;
-  // Selection is the text inside a color span: widen it to the whole span.
-  const open = value.lastIndexOf('<span class="color-', s);
+  // Selection is exactly the text inside a color span: widen it to the whole span.
   let from = s;
   let to = e;
-  if (open !== -1) {
-    const tagEnd = value.indexOf('">', open);
-    const close = value.indexOf('</span>', e);
-    if (tagEnd !== -1 && tagEnd + 2 === s && close === e) {
-      from = open;
-      to = close + '</span>'.length;
-    }
+  const open = OPEN_TAG.exec(value.slice(Math.max(0, s - 60), s));
+  if (open && value.startsWith('</span>', e)) {
+    from = s - open[0].length;
+    to = e + '</span>'.length;
   }
   const selected = value.slice(from, to);
-  const inner = COLOR_SPAN.exec(selected)?.[2] ?? selected;
+  const inner = COLOR_SPAN.exec(selected)?.[1] ?? selected;
   if (!color) {
     edit(area, from, to, inner, from, from + inner.length);
     return;
   }
-  const openTag = `<span class="color-${color}">`;
+  const openTag = `<span style="color: ${color}">`;
   edit(area, from, to, `${openTag}${inner}</span>`, from + openTag.length, from + openTag.length + inner.length);
 }
 
@@ -136,22 +134,75 @@ export function formatToolbar(scope: HTMLElement): HTMLElement {
 
   const bold: Command = { area: (a) => toggleWrap(a, '**'), rich: () => richBold() };
   const italic: Command = { area: (a) => toggleWrap(a, '*'), rich: () => richItalic() };
-  const color = (c: TextColor | null): Command => ({ area: (a) => setColor(a, c), rich: (r) => richColor(r, c) });
+  // The color picker takes focus (the system picker even more), so the selection is
+  // captured when it opens and put back when a color is applied.
+  let saved: { rich: HTMLElement; range: Range } | { area: HTMLTextAreaElement; start: number; end: number } | null = null;
+  const capture = () => {
+    const rich = activeRich(scope);
+    const sel = getSelection();
+    if (rich && sel?.rangeCount) return void (saved = { rich, range: sel.getRangeAt(0).cloneRange() });
+    const active = document.activeElement;
+    const area = active instanceof HTMLTextAreaElement && active.matches(FORMATTABLE) && scope.contains(active) ? active : target;
+    saved = area ? { area, start: area.selectionStart, end: area.selectionEnd } : null;
+  };
+  const applyColor = (color: string | null) => {
+    colorMenu.hidden = true;
+    if (!saved) return;
+    if (color) rememberColor(color, TEXT_RECENT_KEY);
+    if ('rich' in saved) {
+      saved.rich.focus();
+      const sel = getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(saved.range);
+      richColor(saved.rich, color);
+    } else {
+      saved.area.focus();
+      saved.area.setSelectionRange(saved.start, saved.end);
+      setColor(saved.area, color);
+    }
+  };
 
   const colorMenu = h('div', { class: 'menu fmt-colors', hidden: true });
-  for (const c of TEXT_COLORS) {
-    const b = press(h('button', { class: `fmt-swatch color-swatch-${c}`, type: 'button', title: c, 'aria-label': `Color ${c}` }), color(c));
-    b.addEventListener('click', () => (colorMenu.hidden = true));
-    colorMenu.append(b);
-  }
-  const none = press(h('button', { class: 'fmt-none', type: 'button' }, 'No color'), color(null));
-  none.addEventListener('click', () => (colorMenu.hidden = true));
-  colorMenu.append(none);
+  const swatch = (c: string) => {
+    const b = h('button', { class: 'color-swatch', type: 'button', title: c, 'aria-label': `Color ${c}` });
+    b.style.setProperty('--swatch', c);
+    b.addEventListener('mousedown', (e) => e.preventDefault());
+    b.addEventListener('click', () => applyColor(c));
+    return b;
+  };
+  const row = (label: string, colors: string[]) =>
+    colors.length ? h('div', { class: 'color-row' }, h('span', { class: 'color-label' }, label), h('div', { class: 'color-swatches' }, colors.map(swatch))) : null;
+  const native = h('input', { type: 'color', class: 'color-native', value: '#ff7a6e', 'aria-label': 'Pick any color' });
+  native.addEventListener('change', () => isColor(native.value) && applyColor(native.value.toLowerCase()));
+  const fillMenu = () => {
+    colorMenu.replaceChildren(
+      ...[row('Recent', recentColors(TEXT_RECENT_KEY)), row('Suggested', SUGGESTED_TEXT)].filter((x): x is HTMLDivElement => x !== null),
+      h(
+        'div',
+        { class: 'fmt-color-actions' },
+        h('label', { class: 'fmt-any' }, native, '+ Any color'),
+        (() => {
+          const none = h('button', { class: 'fmt-none', type: 'button' }, 'No color');
+          none.addEventListener('mousedown', (e) => e.preventDefault());
+          none.addEventListener('click', () => applyColor(null));
+          return none;
+        })(),
+      ),
+    );
+  };
 
   const colorBtn = h('button', { class: 'fmt-btn fmt-color', type: 'button', title: 'Text color', 'aria-label': 'Text color' }, h('span', { class: 'fmt-color-a' }, 'A'));
   colorBtn.addEventListener('mousedown', (e) => e.preventDefault());
-  colorBtn.addEventListener('click', () => (colorMenu.hidden = !colorMenu.hidden));
-  scope.addEventListener('focusin', () => (colorMenu.hidden = true));
+  colorBtn.addEventListener('click', () => {
+    if (colorMenu.hidden) {
+      capture();
+      fillMenu();
+    }
+    colorMenu.hidden = !colorMenu.hidden;
+  });
+  scope.addEventListener('focusin', (e) => {
+    if (!colorMenu.contains(e.target as Node)) colorMenu.hidden = true;
+  });
 
   // ⌘B / ⌘I in plain fields. Live text gets them from the browser itself.
   scope.addEventListener('keydown', (e) => {
