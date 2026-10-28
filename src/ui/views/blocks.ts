@@ -30,7 +30,7 @@ export function blocksView(type: BlockType): View {
         h('a', { class: 'btn btn-small push', href: `#/blocks/${type}/new` }, icon('plus'), `New ${label.one.toLowerCase()}`),
       ),
       h('p', { class: 'muted lead' }, `Every ${label.one.toLowerCase()} block in this library, from documents and from the standalone collection.`),
-      type === 'link' && pendingCount() > 0 && h('a', { class: 'notice', href: '#/links-found' }, icon('link'), `${pendingCount()} links in your text are not link blocks yet. Review and convert them.`),
+      type === 'link' && pendingCount() > 0 && h('a', { class: 'notice', href: '#/links-found' }, icon('link'), pendingCount() === 1 ? '1 link in your text is not a link block yet. Review and convert it.' : `${pendingCount()} links in your text are not link blocks yet. Review and convert them.`),
       blocks.length
         ? h('div', { class: `block-grid${type === 'image' ? ' block-grid-images' : ''}` }, blocks.map((b) => blockCard(b, { usage: { homeId: b.fileId }, compact: true })))
         : empty(`No ${label.many.toLowerCase()} yet.`, 'Add one here, or write one inside a document with the Block button.'),

@@ -110,6 +110,12 @@ export function mediaRefs(content: string): string[] {
 /** Title to show: the explicit one, else the first line of content without Markdown marks. */
 export function displayTitle(b: Pick<ParsedBlock, 'title' | 'content' | 'type'>): string {
   if (b.title) return b.title;
+  // A link is named after its website: a full URL is too long to be a title.
+  if (b.type === 'link') {
+    const url = firstUrl(b.content);
+    const site = url ? siteName(url) : null;
+    if (site) return site;
+  }
   const first = b.content
     .split(/\r?\n/)
     .map((l) => l.trim())
@@ -152,6 +158,15 @@ export function cleanUrl(raw: string): string {
 export function firstUrl(content: string): string | null {
   const m = new RegExp(LINK_SOURCE, 'i').exec(content);
   return m ? cleanUrl(m[0]) : null;
+}
+
+/** The host of a link without www., as a short name for it. */
+export function siteName(url: string): string | null {
+  try {
+    return new URL(hrefOf(url)).hostname.replace(/^www\./i, '') || null;
+  } catch {
+    return null;
+  }
 }
 
 /** Where a link goes when clicked. The text itself is never changed: only the click target gets a scheme. */

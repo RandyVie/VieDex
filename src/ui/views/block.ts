@@ -1,7 +1,8 @@
-import { blockById, usedIn } from '../../library/derived';
+import { allBlocks, blockById, usedIn } from '../../library/derived';
 import { BLOCK_LABEL } from '../../library/layout';
 import { getIndex } from '../../library/library';
-import { displayTitle, embedCode } from '../../md/blocks';
+import { displayTitle, embedCode, firstUrl } from '../../md/blocks';
+import { rootDomain } from '../../md/linkify';
 import { blockBadge, docBadge, empty, placeOf } from '../components';
 import { h, icon } from '../dom';
 import { toast } from '../feedback';
@@ -9,6 +10,41 @@ import { confirmDeleteBlock } from '../actions';
 import { blockCard } from '../render-doc';
 import { go } from '../router';
 import type { View } from './view';
+
+/** Other link blocks on the same website, by main domain. */
+function sameSite(id: string, content: string) {
+  const url = firstUrl(content);
+  const root = url ? rootDomain(url) : null;
+  if (!root) return null;
+  const others = allBlocks()
+    .filter((o) => o.type === 'link' && o.id !== id && !o.synthetic)
+    .map((o) => ({ o, url: firstUrl(o.content) }))
+    .filter((x): x is { o: typeof x.o; url: string } => !!x.url && rootDomain(x.url) === root)
+    .sort((a, b) => a.url.localeCompare(b.url));
+  return h(
+    'section',
+    { class: 'side-block' },
+    h('h2', null, 'Same site', h('span', { class: 'side-domain' }, root), h('span', { class: 'count' }, String(others.length))),
+    others.length
+      ? h(
+          'ul',
+          { class: 'side-list' },
+          others.map(({ o, url: u }) =>
+            h(
+              'li',
+              null,
+              h(
+                'a',
+                { href: `#/block/${encodeURIComponent(o.id)}`, title: u },
+                blockBadge('link'),
+                h('span', { class: 'side-url' }, h('span', { class: 'side-url-path' }, u.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '')), o.title.trim() && h('span', { class: 'side-url-title' }, o.title)),
+              ),
+            ),
+          ),
+        )
+      : h('p', { class: 'muted' }, `No other links to ${root} yet.`),
+  );
+}
 
 export function blockView(id: string): View {
   const b = blockById(id);
@@ -74,6 +110,7 @@ export function blockView(id: string): View {
           h('h2', null, 'Used in', h('span', { class: 'count' }, String(uses.length))),
           uses.length ? h('ul', { class: 'side-list' }, uses.map(useRow)) : h('p', { class: 'muted' }, 'Not embedded in any document yet.'),
         ),
+        b.type === 'link' && sameSite(id, b.content),
       ),
     ),
   };

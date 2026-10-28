@@ -112,18 +112,21 @@ function copyEmbed(id: string, b0: CardBlock) {
 export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderContext = { file: null, depth: 0 }): HTMLElement {
   const href = b.id ? `#/block/${encodeURIComponent(b.id)}` : null;
   const uses = b.id ? usedIn(b.id) : [];
-  const title = displayTitle(b);
   const url = b.type === 'link' ? firstUrl(b.content) : null;
+  // A link without its own title is named after its website: short, and something to click.
+  const site = url && !b.title.trim() ? displayTitle(b) : null;
+  const title = displayTitle(b);
+  const showTitle = !!b.title.trim() || !!site || !!opts.compact;
 
   const head = h(
     'header',
     { class: 'block-head' },
-    // Without its own title the first line would show twice, so the label links instead.
-    href && !b.title.trim() ? h('a', { class: 'block-type', href, title: 'Open block' }, BLOCK_LABEL[b.type].one) : h('span', { class: 'block-type' }, BLOCK_LABEL[b.type].one),
-    b.title.trim() || opts.compact
+    // Without a title to click, the type label opens the block.
+    href && !showTitle ? h('a', { class: 'block-type', href, title: 'Open block' }, BLOCK_LABEL[b.type].one) : h('span', { class: 'block-type' }, BLOCK_LABEL[b.type].one),
+    showTitle
       ? href
-        ? h('a', { class: 'block-title', href }, title)
-        : h('span', { class: 'block-title' }, title)
+        ? h('a', { class: `block-title${site ? ' is-site' : ''}`, href }, title)
+        : h('span', { class: `block-title${site ? ' is-site' : ''}` }, title)
       : h('span', { class: 'block-title' }),
     opts.fromFileId && h('span', { class: 'block-from' }, 'from ', placeLink(opts.fromFileId)),
     !opts.fromFileId && !opts.usage && uses.length > 0 && h('a', { class: 'block-uses', href: href!, title: 'Documents that embed this block' }, `used in ${uses.length}`),
@@ -143,7 +146,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
     'section',
     { class: `block block-${b.type}${opts.fromFileId ? ' is-embedded' : ''}${url && !body && !b.title.trim() ? ' is-bare-link' : ''}` },
     head,
-    url && h('a', { class: 'block-url', href: hrefOf(url), target: '_blank', rel: 'noopener noreferrer' }, icon('external'), url),
+    url && h('a', { class: 'block-url', href: hrefOf(url), target: '_blank', rel: 'noopener noreferrer', title: url }, icon('external'), h('span', { class: 'block-url-text' }, url)),
     body,
     opts.usage && usageFooter(b.id, opts.usage.homeId),
   );

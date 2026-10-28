@@ -20,6 +20,20 @@ export function urlKey(url: string): string {
   }
 }
 
+// Two-part public suffixes, so bbc.co.uk is the site and not co.uk.
+const TWO_PART = new Set(['co.uk', 'org.uk', 'ac.uk', 'gov.uk', 'com.au', 'net.au', 'org.au', 'co.nz', 'co.jp', 'com.br']);
+
+/** The website a link belongs to: its main domain, without www. or other subdomains. */
+export function rootDomain(url: string): string | null {
+  try {
+    const labels = new URL(hrefOf(url)).hostname.toLowerCase().split('.');
+    const n = TWO_PART.has(labels.slice(-2).join('.')) ? 3 : 2;
+    return labels.slice(-n).join('.');
+  } catch {
+    return null;
+  }
+}
+
 /** Links in one line of normal text, ignoring inline code and images. */
 export function findUrls(line: string): string[] {
   // Inline code, images and wikilink titles are not links, even when they look like one.

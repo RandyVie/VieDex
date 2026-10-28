@@ -131,6 +131,19 @@ A colophon page in every document that lists the typefaces used.
 https://example.com/why-grids-work
 Grids reduce decisions, not options.
 :::
+
+:::link ^vs0rt Viesign
+www.viesign.be
+:::
+
+:::link ^vs1nd
+www.viesign.be/ind
+:::
+
+:::link ^vs2bl
+blog.viesign.be/kjdsfksdfjk
+Same site, on a subdomain.
+:::
 `],
   ['Design library', '_blocks', 'images.md', `:::image ^im9rk Grotesk specimen
 ![[Grotesk R.svg]]

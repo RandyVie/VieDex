@@ -526,6 +526,24 @@ kbd {
 
 /* --- Views ----------------------------------------------------------------- */
 
+/*
+ * Long words with no place to break (URLs, pasted codes) must never run out of their box.
+ * Lines that are meant to stay on one line use nowrap + ellipsis and are not affected.
+ */
+.view,
+.seg-list,
+.md-view,
+.dialog {
+  overflow-wrap: anywhere;
+}
+
+.item-main,
+.item-side,
+.block,
+.block-body {
+  min-width: 0;
+}
+
 .view {
   padding: 28px var(--gutter) 64px;
   max-width: 1180px;
@@ -1744,6 +1762,8 @@ kbd {
 .block-title {
   flex: 1;
   min-width: 0;
+  /* URLs and other long words have no spaces to wrap at. */
+  overflow-wrap: anywhere;
   font-weight: 600;
   font-size: var(--text-block-title);
   color: var(--text);
@@ -1788,6 +1808,7 @@ a.block-title:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
   font: 12px var(--mono);
   color: var(--b-link);
 }
@@ -2442,6 +2463,11 @@ a.block-title:hover {
 
 /* Plain reading: blocks become part of the text. Only the view changes. */
 
+/* The website name stands in for a missing title; reading as text, the link line is enough. */
+.blocks-plain .block-title.is-site {
+  display: none;
+}
+
 /* A link block that only repeats a link from the text above adds nothing here. */
 .blocks-plain .block.is-echo .block-url,
 .blocks-plain .block.is-echo.is-bare-link {
@@ -2792,6 +2818,65 @@ a.block-title:hover {
 
 .block.is-bare-link .block-url {
   margin-bottom: 12px;
+}
+
+/* --- Same site list -------------------------------------------------------- */
+
+.side-domain {
+  font: 11px var(--mono);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--b-link);
+}
+
+.side-url {
+  display: grid;
+  min-width: 0;
+}
+
+.side-list a .side-url-path {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 13px var(--mono);
+  color: var(--text);
+}
+
+.side-list a .side-url-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+/* --- Long titles and links ------------------------------------------------- */
+
+.block-url-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.block-url .icon {
+  flex: none;
+}
+
+.block-grid .block-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.block-grid .block-head {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.block-grid .block-type {
+  flex: none;
+  margin-top: 4px;
 }
 
 /* --- Responsive ------------------------------------------------------------ */
