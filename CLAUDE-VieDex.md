@@ -111,6 +111,15 @@ Caption for the image.
 - `![[file name.png]]` inside an image block shows a file from `_media/`.
 - Each block type has a collection view listing every block of that type in the library. Each block shows where it lives and every document (and book) that uses it.
 
+### Text formatting
+
+The editors have bold, italic, text size and color. Everything stays plain Markdown so files read well in Drive:
+
+- Bold `**text**`, italic `*text*`.
+- Size works per line: small `<small>text</small>`, normal, `###`, `##`, `#`.
+- Color: `<span class="color-red">text</span>`. Only the fixed set red, orange, yellow, green, blue, purple and gray is rendered; any other class or inline style is removed by the sanitizer (and the CSP blocks inline styles anyway).
+- **Write shows formatting live** (`src/ui/rich.ts`). A text section is only made live when converting it to live text and back gives the same rendered result; otherwise (tables, other HTML) it stays a plain text field with the codes. A live section that was not edited is saved with its original text unchanged. The Markdown tab always shows the raw file.
+
 ### Links in text
 
 - Anything in normal text starting with `http://`, `https://` or `www.` is a link. So is a bare domain ending in a known extension (`something.com`, `studio.be/work`, `bbc.co.uk`); the list is `LINK_EXTENSIONS` in `src/md/blocks.ts`. Extensions that are common words (`.it`, `.at`, `.no`, `.me`, `.us`) are left out, and email addresses are skipped. Code, blocks, embeds, wikilink titles and frontmatter are not scanned.

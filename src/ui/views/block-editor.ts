@@ -6,6 +6,7 @@ import { blockFields } from '../block-fields';
 import { empty, placeOf } from '../components';
 import { clear, h } from '../dom';
 import { confirmDialog, errorText, toast } from '../feedback';
+import { formatToolbar } from '../format';
 import { blockCard } from '../render-doc';
 import { go } from '../router';
 import type { View } from './view';
@@ -67,6 +68,7 @@ export function blockEditorView(id: string | null, newType: BlockType | null): V
   };
   saveBtn.addEventListener('click', () => save());
 
+  const fmtSlot = h('div');
   const el = h(
     'section',
     { class: 'view editor' },
@@ -79,6 +81,7 @@ export function blockEditorView(id: string | null, newType: BlockType | null): V
     title,
     ref && h('p', { class: 'muted note' }, 'Changes show up everywhere this block is embedded.'),
     h('div', { class: 'editor-tabs' }, tabWrite, tabPreview, h('span', { class: 'hint' }, '⌘S to save')),
+    type !== 'code' && type !== 'image' ? fmtSlot : null,
     h('section', { class: `block block-${type} edit-card edit-card-solo` }, h('div', { class: 'block-body' }, fields.el)),
     preview,
     h('div', { class: 'editor-actions' }, h('a', { class: 'btn', href: ref ? `#/block/${encodeURIComponent(ref.id)}` : `#/blocks/${type}` }, 'Cancel'), saveBtn),
@@ -89,6 +92,7 @@ export function blockEditorView(id: string | null, newType: BlockType | null): V
       save();
     }
   });
+  fmtSlot.replaceWith(formatToolbar(el));
   queueMicrotask(() => (ref ? fields.focus() : title.focus()));
 
   return {

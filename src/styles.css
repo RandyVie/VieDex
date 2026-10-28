@@ -28,6 +28,15 @@
   --b-image: #c8f560;
   --b-doc: #a4a8b0;
 
+  /* Text colors from the editor. Chosen to read well on the dark background. */
+  --tx-red: #ff7a6e;
+  --tx-orange: #ffa45c;
+  --tx-yellow: #ffd55c;
+  --tx-green: #8be08b;
+  --tx-blue: #7fb2ff;
+  --tx-purple: #c49bff;
+  --tx-gray: #8b9099;
+
   --sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
 
@@ -541,6 +550,16 @@ kbd {
 .block,
 .block-body {
   min-width: 0;
+}
+
+/* Controls keep their words whole. */
+.view button,
+.view .btn,
+.view .tab,
+.view .badge,
+.view .hint {
+  overflow-wrap: normal;
+  white-space: nowrap;
 }
 
 .view {
@@ -2875,6 +2894,171 @@ a.block-title:hover {
 .block-grid .block-type {
   flex: none;
   margin-top: 4px;
+}
+
+/* --- Text formatting ------------------------------------------------------ */
+
+.color-red { color: var(--tx-red); }
+.color-orange { color: var(--tx-orange); }
+.color-yellow { color: var(--tx-yellow); }
+.color-green { color: var(--tx-green); }
+.color-blue { color: var(--tx-blue); }
+.color-purple { color: var(--tx-purple); }
+.color-gray { color: var(--tx-gray); }
+
+.prose small {
+  font-size: 0.82em;
+  color: var(--text-2);
+}
+
+.fmt-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 8px;
+  padding: 3px;
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+}
+
+.fmt-btn {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--text-2);
+  font: 600 14px var(--sans);
+  cursor: pointer;
+}
+
+.fmt-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.fmt-italic {
+  font-style: italic;
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+.fmt-size-down {
+  font-size: 11px;
+}
+
+.fmt-size-up {
+  font-size: 17px;
+}
+
+.fmt-color-a {
+  padding-bottom: 1px;
+  border-bottom: 3px solid;
+  border-image: linear-gradient(90deg, var(--tx-red), var(--tx-yellow), var(--tx-green), var(--tx-blue), var(--tx-purple)) 1;
+  line-height: 1;
+}
+
+.fmt-sep {
+  width: 1px;
+  height: 18px;
+  margin: 0 4px;
+  background: var(--line-strong);
+}
+
+.fmt-colors {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px;
+}
+
+.fmt-swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.fmt-swatch:hover {
+  transform: scale(1.12);
+}
+
+.color-swatch-red { background: var(--tx-red); }
+.color-swatch-orange { background: var(--tx-orange); }
+.color-swatch-yellow { background: var(--tx-yellow); }
+.color-swatch-green { background: var(--tx-green); }
+.color-swatch-blue { background: var(--tx-blue); }
+.color-swatch-purple { background: var(--tx-purple); }
+.color-swatch-gray { background: var(--tx-gray); }
+
+.fmt-none {
+  margin-left: 4px;
+  padding: 3px 8px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text-2);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.fmt-none:hover {
+  color: var(--text);
+}
+
+/* --- Live text in Write ---------------------------------------------------- */
+
+.rich {
+  position: relative;
+  min-height: 1.7em;
+  padding: 6px 0;
+  outline: none;
+  white-space: pre-wrap;
+  cursor: text;
+}
+
+.rich.seg-rich {
+  max-width: none;
+  font-size: var(--text-body);
+}
+
+.rich.field-rich {
+  max-width: none;
+  padding: 2px 0;
+  font-size: var(--text-block);
+}
+
+.rich > :last-child {
+  margin-bottom: 0;
+}
+
+.rich.is-empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+.rich a {
+  cursor: text;
+}
+
+.rich ul,
+.rich ol {
+  white-space: normal;
+}
+
+.rich li {
+  white-space: pre-wrap;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

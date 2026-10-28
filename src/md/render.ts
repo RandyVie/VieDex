@@ -26,6 +26,11 @@ const marked = new Marked({
   ],
 });
 
+/** Markdown as sanitized HTML, without link resolving. Used by the live editor. */
+export function markdownHtml(md: string): DocumentFragment {
+  return sanitize(marked.parse(md, { async: false }) as string);
+}
+
 /** Wikilink targets in a Markdown body, ignoring code. */
 export function extractLinks(body: string): string[] {
   const text = body.replace(/```[\s\S]*?```/g, '').replace(/`[^`\n]*`/g, '');

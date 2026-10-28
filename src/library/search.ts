@@ -73,13 +73,21 @@ export function searchAll(files: FileEntry[], blocks: BlockRef[], raw: string): 
   return hits.sort((a, b) => b.score - a.score);
 }
 
-/** A short excerpt around the first matching term, for result rows. */
-export function excerpt(text: string, raw = '', len = 140): string {
-  const flat = text
+/** Markdown as it reads: no block fences, embeds, tags, emphasis marks or heading hashes. */
+export function plainText(text: string): string {
+  return text
     .replace(/^:::.*$/gm, '')
     .replace(/!\[\[[^\]]*\]\]/g, '')
+    .replace(/<\/?[a-z][^>]*>/gi, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/(\*\*|\*|__)(?=\S)([\s\S]*?\S)\1/g, '$2')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+/** A short excerpt around the first matching term, for result rows. */
+export function excerpt(text: string, raw = '', len = 140): string {
+  const flat = plainText(text);
   const { terms } = parseQuery(raw);
   const lower = flat.toLowerCase();
   const at = terms.map((t) => lower.indexOf(t)).find((i) => i >= 0) ?? -1;

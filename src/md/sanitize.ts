@@ -21,6 +21,7 @@ const TAG_ATTRS: Record<string, string[]> = {
   time: ['datetime'],
   details: ['open'],
   input: ['type', 'checked'],
+  span: ['class'],
 };
 
 function safeUrl(value: string, forImage: boolean): boolean {
@@ -55,7 +56,8 @@ function clean(node: Node, out: Document): Node | null {
     const name = attr.name.toLowerCase();
     if (!GLOBAL_ATTRS.has(name) && !allowed.includes(name)) continue;
     if ((name === 'href' || name === 'src') && !safeUrl(attr.value, name === 'src')) continue;
-    if (name === 'class' && !/^language-[\w+-]+$/.test(attr.value)) continue;
+    // Classes only from a fixed list: code languages, and text colors from the editor.
+    if (name === 'class' && !/^language-[\w+-]+$/.test(attr.value) && !(tag === 'span' && /^color-(red|orange|yellow|green|blue|purple|gray)$/.test(attr.value))) continue;
     copy.setAttribute(name, attr.value);
   }
   if (tag === 'input') copy.setAttribute('disabled', '');

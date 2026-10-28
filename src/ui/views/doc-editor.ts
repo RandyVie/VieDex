@@ -6,6 +6,7 @@ import { bookName, crumbs, loading } from '../components';
 import { clear, h } from '../dom';
 import { confirmDialog, errorText, toast } from '../feedback';
 import { markdownView } from '../markdown-view';
+import { formatToolbar } from '../format';
 import { renderDocument } from '../render-doc';
 import { segmentEditor } from '../segment-editor';
 import { go } from '../router';
@@ -50,6 +51,7 @@ export function docEditorView(id: string | null, bookId: string | null): View {
       for (const [k, b] of Object.entries(tabs)) b.classList.toggle('is-active', k === next);
       segs.el.hidden = next !== 'write';
       segs.toolbar.hidden = next === 'preview';
+      fmt.hidden = next === 'preview';
       segs.setInsertTarget(next === 'markdown' ? { block: raw.insertBlock, embed: raw.insertEmbed } : null);
       raw.el.hidden = next !== 'markdown';
       preview.hidden = next !== 'preview';
@@ -112,6 +114,7 @@ export function docEditorView(id: string | null, bookId: string | null): View {
       }
     });
 
+    const fmt = formatToolbar(el);
     const cancel = h('a', { class: 'btn', href: existing ? `#/doc/${existing.id}` : targetBook ? `#/book/${targetBook}` : '#/' }, 'Cancel');
     clear(
       el,
@@ -119,6 +122,7 @@ export function docEditorView(id: string | null, bookId: string | null): View {
       title,
       h('div', { class: 'editor-fields editor-fields-one' }, h('label', { class: 'field' }, h('span', null, 'Tags'), tags)),
       h('div', { class: 'editor-tabs' }, tabs.write, tabs.markdown, tabs.preview, segs.toolbar, h('span', { class: 'hint' }, '⌘S to save')),
+      fmt,
       segs.el,
       raw.el,
       preview,

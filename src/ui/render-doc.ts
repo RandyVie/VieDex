@@ -1,5 +1,6 @@
 import { displayTitle, embedCode, firstUrl, hrefOf, linkNote, parseBody, type BlockType, type Segment } from '../md/blocks';
 import { findUrls, urlKey } from '../md/linkify';
+import { plainText } from '../library/search';
 import { renderMarkdown } from '../md/render';
 import { blockById, lookupLink, mediaByName, usedIn } from '../library/derived';
 import { BLOCK_LABEL } from '../library/layout';
@@ -139,7 +140,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
   const body = !text.trim()
     ? null
     : opts.compact && b.type !== 'image' && b.type !== 'code'
-      ? h('div', { class: 'block-body' }, h('p', { class: 'block-clip' }, text.replace(/\s+/g, ' ').slice(0, 220)))
+      ? h('div', { class: 'block-body' }, h('p', { class: 'block-clip' }, plainText(text).slice(0, 220)))
       : h('div', { class: 'block-body' }, renderSegments(parseBody(text), { file: ctx.file, depth: ctx.depth + 1 }));
 
   return h(

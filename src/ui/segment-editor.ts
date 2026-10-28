@@ -7,6 +7,7 @@ import { autoGrow, blockFields, type Fields } from './block-fields';
 import { placeLink } from './components';
 import { clear, h, icon } from './dom';
 import { mediaImage } from './media';
+import { richField, type RichField } from './rich';
 import { pickBlock, pickMedia } from './pickers';
 import { mediaByName } from '../library/derived';
 
@@ -50,7 +51,7 @@ let keySeq = 0;
 
 export function segmentEditor(body: string, docId: string | null, onDirty: () => void): SegmentEditor {
   let segs: Seg[] = [];
-  let active: { key: number; caret: number | null } | null = null;
+  let active: { key: number; caret: number | null; rich?: RichField } | null = null;
   const list = h('div', { class: 'seg-list' });
   const ids = () => new Set(segs.flatMap((s) => (s.kind === 'block' ? [s.id] : [])));
   const freshId = () => newBlockId((x) => blockIdTaken(x) || ids().has(x));
@@ -123,7 +124,7 @@ export function segmentEditor(body: string, docId: string | null, onDirty: () =>
 
   // --- Rendering -------------------------------------------------------------
 
-  const fieldsByKey = new Map<number, Fields | HTMLTextAreaElement>();
+  const fieldsByKey = new Map<number, Fields | HTMLTextAreaElement | RichField>();
 
   function tools(i: number) {
     const btn = (label: string, name: Parameters<typeof icon>[0], run: () => void, cls = '') =>
@@ -144,6 +145,16 @@ export function segmentEditor(body: string, docId: string | null, onDirty: () =>
       });
 
     if (s.kind === 'text') {
+      const placeholder = segs.length === 1 ? 'Start writing. Use the toolbar to add blocks.' : 'Write here';
+      const rich: RichField | null = richField(s.text, placeholder, () => {
+        s.text = rich!.value();
+        onDirty();
+      }, 'seg-rich');
+      if (rich) {
+        rich.el.addEventListener('focusin', () => (active = { key: s.key, caret: null, rich }));
+        fieldsByKey.set(s.key, rich);
+        return h('div', { class: 'seg seg-is-text' }, rich.el, segs.length > 1 && s.text.trim() === '' && i < segs.length - 1 && tools(i));
+      }
       const area = autoGrow(h('textarea', { class: 'seg-text', rows: 1, placeholder: segs.length === 1 ? 'Start writing. Use the toolbar to add blocks.' : 'Write here', spellcheck: 'true' }));
       area.value = s.text;
       const remember = () => (active = { key: s.key, caret: area.selectionStart });
@@ -213,11 +224,22 @@ export function segmentEditor(body: string, docId: string | null, onDirty: () =>
   // --- Structure changes ------------------------------------------------------
 
   function insert(seg: Seg) {
+    // The live section holding the cursor right now wins over the last focused one.
+    const node = getSelection()?.anchorNode ?? null;
+    for (const x of segs) {
+      const f = fieldsByKey.get(x.key);
+      if (node && f && 'splitAtCursor' in f && f.el.contains(node)) active = { key: x.key, caret: null, rich: f };
+    }
     let at = segs.length;
     const i = active ? segs.findIndex((s) => s.key === active!.key) : -1;
     if (i >= 0) {
       const cur = segs[i];
-      if (cur.kind === 'text' && active!.caret !== null && cur.text.trim()) {
+      const split = cur.kind === 'text' && active!.rich && cur.text.trim() ? active!.rich.splitAtCursor() : null;
+      if (split) {
+        // Live text: the new part goes after the paragraph the cursor is in.
+        segs.splice(i, 1, text(split[0]), seg, text(split[1]));
+        at = -1;
+      } else if (cur.kind === 'text' && active!.caret !== null && cur.text.trim()) {
         // Split the text at the cursor and put the new part in between.
         const before = cur.text.slice(0, active!.caret).replace(/\s+$/, '');
         const after = cur.text.slice(active!.caret).replace(/^\s+/, '');

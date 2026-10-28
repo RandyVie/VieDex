@@ -5,6 +5,7 @@ import { firstUrl, mediaRefs, type BlockType } from '../md/blocks';
 import { clear, h, icon } from './dom';
 import { mediaImage } from './media';
 import { pickMedia } from './pickers';
+import { richField } from './rich';
 
 export interface Fields {
   el: HTMLElement;
@@ -40,13 +41,14 @@ const PLACEHOLDER: Partial<Record<BlockType, string>> = {
 export function blockFields(type: BlockType, content: string, onChange: () => void): Fields {
   if (type === 'image') {
     let name = mediaRefs(content)[0] ?? '';
-    const caption = area(
+    const caption = textField(
       content
         .split('\n')
         .filter((l) => !MEDIA_LINE_RE.test(l))
         .join('\n')
         .trim(),
       'Caption (optional)',
+      onChange,
     );
     const preview = h('div', { class: 'field-image' });
     const choose = async () => {
@@ -66,10 +68,9 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
       );
     };
     show();
-    caption.addEventListener('input', onChange);
     return {
-      el: h('div', { class: 'fields' }, preview, caption),
-      value: () => [name && `![[${name}]]`, caption.value.trim()].filter(Boolean).join('\n'),
+      el: h('div', { class: 'fields' }, preview, caption.el),
+      value: () => [name && `![[${name}]]`, caption.value().trim()].filter(Boolean).join('\n'),
       focus: () => caption.focus(),
     };
   }
@@ -99,17 +100,25 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
     const at = url0 ? lines.findIndex((l) => l.trim() === url0) : -1;
     if (at >= 0 || !content.trim()) {
       const url = h('input', { class: 'field-url', type: 'url', placeholder: 'https://', value: url0 ?? '', 'aria-label': 'URL' });
-      const note = area(lines.filter((_, i) => i !== at).join('\n').trim(), 'Why this link matters (optional)');
-      [url, note].forEach((el) => el.addEventListener('input', onChange));
+      const note = textField(lines.filter((_, i) => i !== at).join('\n').trim(), 'Why this link matters (optional)', onChange);
+      url.addEventListener('input', onChange);
       return {
-        el: h('div', { class: 'fields' }, url, note),
-        value: () => [url.value.trim(), note.value.trim()].filter(Boolean).join('\n'),
+        el: h('div', { class: 'fields' }, url, note.el),
+        value: () => [url.value.trim(), note.value().trim()].filter(Boolean).join('\n'),
         focus: () => url.focus(),
       };
     }
   }
 
-  const text = area(content, PLACEHOLDER[type] ?? 'Write here');
-  text.addEventListener('input', onChange);
-  return { el: h('div', { class: 'fields' }, text), value: () => text.value.replace(/\s+$/, ''), focus: () => text.focus() };
+  const text = textField(content, PLACEHOLDER[type] ?? 'Write here', onChange);
+  return { el: h('div', { class: 'fields' }, text.el), value: () => text.value().replace(/\s+$/, ''), focus: () => text.focus() };
+}
+
+/** Live formatted text when the content allows it, otherwise a plain text field. */
+function textField(value: string, placeholder: string, onChange: () => void): { el: HTMLElement; value(): string; focus(): void } {
+  const rich = richField(value, placeholder, onChange, 'field-rich');
+  if (rich) return rich;
+  const a = area(value, placeholder);
+  a.addEventListener('input', onChange);
+  return { el: a, value: () => a.value, focus: () => a.focus() };
 }
