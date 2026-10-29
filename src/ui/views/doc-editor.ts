@@ -8,6 +8,7 @@ import { confirmDialog, errorText, toast } from '../feedback';
 import { markdownView } from '../markdown-view';
 import { formatToolbar } from '../format';
 import { renderDocument } from '../render-doc';
+import { withTagSuggestions } from '../tag-suggest';
 import { segmentEditor } from '../segment-editor';
 import { go } from '../router';
 import { ui } from '../ui-state';
@@ -120,7 +121,7 @@ export function docEditorView(id: string | null, bookId: string | null): View {
       el,
       existing ? crumbs(existing) : h('p', { class: 'eyebrow' }, `New document in ${bookName(targetBook)}`),
       title,
-      h('div', { class: 'editor-fields editor-fields-one' }, h('label', { class: 'field' }, h('span', null, 'Tags'), tags)),
+      h('div', { class: 'editor-fields editor-fields-one' }, h('label', { class: 'field' }, h('span', null, 'Tags'), withTagSuggestions(tags))),
       h('div', { class: 'editor-tabs' }, tabs.write, tabs.markdown, tabs.preview, segs.toolbar, h('span', { class: 'hint' }, '⌘S to save')),
       fmt,
       segs.el,
