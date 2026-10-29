@@ -89,3 +89,79 @@ export function withTagSuggestions(input: HTMLInputElement): HTMLElement {
 
   return h('div', { class: 'suggest-wrap' }, input, list);
 }
+
+export interface Choice {
+  /** What goes into the field. */
+  value: string;
+  label: string;
+}
+
+/**
+ * A dropdown of choices for a single-value field, filtered by what is typed.
+ * Used instead of <datalist>, which some browsers show twice (value and label).
+ */
+export function withChoices(input: HTMLInputElement, choices: Choice[]): HTMLElement {
+  const list = h('ul', { class: 'suggest suggest-choices', role: 'listbox', hidden: true });
+  input.setAttribute('autocomplete', 'off');
+  input.setAttribute('role', 'combobox');
+  input.setAttribute('aria-autocomplete', 'list');
+  let shown: Choice[] = [];
+  let active = 0;
+
+  const close = () => {
+    list.hidden = true;
+    shown = [];
+  };
+
+  const show = () => {
+    const q = input.value.trim().toLowerCase();
+    shown = choices.filter((c) => !q || c.value.includes(q) || c.label.toLowerCase().includes(q));
+    // Exact match typed already: nothing left to choose.
+    if (shown.length === 1 && shown[0].value === q) shown = [];
+    active = 0;
+    if (!shown.length) return close();
+    list.replaceChildren(
+      ...shown.map((c, i) => {
+        const li = h('li', { class: `suggest-item${i === active ? ' is-active' : ''}`, role: 'option' }, h('span', null, c.label), h('span', { class: 'suggest-value' }, c.value));
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          pick(c);
+        });
+        return li;
+      }),
+    );
+    list.hidden = false;
+  };
+
+  const pick = (c: Choice) => {
+    input.value = c.value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    close();
+  };
+
+  input.addEventListener('focus', show);
+  input.addEventListener('input', (e) => {
+    // Our own pick also fires input; only real typing reopens the list.
+    if (e.isTrusted) show();
+  });
+  input.addEventListener('blur', () => setTimeout(close, 100));
+  input.addEventListener('keydown', (e) => {
+    if (list.hidden) {
+      if (e.key === 'ArrowDown') {
+        show();
+        e.preventDefault();
+      }
+      return;
+    }
+    if (e.key === 'ArrowDown') active = (active + 1) % shown.length;
+    else if (e.key === 'ArrowUp') active = (active - 1 + shown.length) % shown.length;
+    else if (e.key === 'Enter') pick(shown[active]);
+    else if (e.key === 'Escape') close();
+    else return;
+    e.preventDefault();
+    list.querySelectorAll('.suggest-item').forEach((li, i) => li.classList.toggle('is-active', i === active));
+    list.querySelector('.is-active')?.scrollIntoView({ block: 'nearest' });
+  });
+
+  return h('div', { class: 'suggest-wrap' }, input, list);
+}

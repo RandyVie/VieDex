@@ -3334,6 +3334,25 @@ a.block-title:hover {
   color: var(--text);
 }
 
+.suggest-choices {
+  right: auto;
+  min-width: 220px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.suggest-choices .suggest-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-family: var(--sans);
+}
+
+.suggest-value {
+  font: 11px var(--mono);
+  color: var(--text-3);
+}
+
 /* --- Responsive ------------------------------------------------------------ */
 
 @media (max-width: 1100px) {

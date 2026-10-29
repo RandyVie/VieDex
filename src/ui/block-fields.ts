@@ -7,6 +7,7 @@ import { clear, h, icon } from './dom';
 import { mediaImage } from './media';
 import { pickMedia } from './pickers';
 import { richField } from './rich';
+import { withChoices } from './tag-suggest';
 
 export interface Fields {
   el: HTMLElement;
@@ -79,9 +80,8 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
   if (type === 'code') {
     const m = FENCE_RE.exec(content.trim());
     // A list to pick from, but any language can still be typed.
-    const listId = `langs-${Math.random().toString(36).slice(2, 8)}`;
-    const lang = h('input', { class: 'field-lang', placeholder: 'Language (auto)', value: m ? m[1] : '', 'aria-label': 'Language', list: listId, autocomplete: 'off' });
-    const list = h('datalist', { id: listId }, LANGUAGES.map((l) => h('option', { value: l.id }, l.label)));
+    const lang = h('input', { class: 'field-lang', placeholder: 'Language (auto)', value: m ? m[1] : '', 'aria-label': 'Language' });
+    const langPicker = withChoices(lang, LANGUAGES.map((l) => ({ value: l.id, label: l.label })));
     const hint = h('span', { class: 'field-lang-hint', hidden: true }, 'detected');
     const code = area(m ? m[2] : content, 'Paste or write code', 'field-area field-code');
     // Detect while the field is empty or was filled by detection; a language set by hand stays.
@@ -115,7 +115,7 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
     });
     [lang, code].forEach((el) => el.addEventListener('input', onChange));
     return {
-      el: h('div', { class: 'fields' }, h('div', { class: 'field-lang-row' }, lang, list, hint), code),
+      el: h('div', { class: 'fields' }, h('div', { class: 'field-lang-row' }, langPicker, hint), code),
       value: () => `\`\`\`${lang.value.trim()}\n${code.value.replace(/\n+$/, '')}\n\`\`\``,
       focus: () => code.focus(),
     };
