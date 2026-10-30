@@ -91,7 +91,9 @@ export const drive = {
   },
 
   async trash(id: string) {
-    await assertFile(id);
+    // Never the library root itself; a folder must be one known inside it.
+    if (id === guard.rootId) throw new OutsideRootError();
+    if (!guard.folders.has(id)) await assertFile(id);
     await backend.trash(id);
     guard.forget(id);
   },

@@ -1,8 +1,8 @@
 import { getIndex } from '../../library/library';
-import { createBook, updateBook } from '../../library/writes';
+import { bookFileCount, createBook, deleteBook, updateBook } from '../../library/writes';
 import { bookCard, bookStats, docRow, empty, paintBook } from '../components';
 import { h, icon } from '../dom';
-import { errorText, toast } from '../feedback';
+import { confirmDialog, errorText, toast } from '../feedback';
 import { bookDialog } from '../pickers';
 import { go } from '../router';
 import type { View } from './view';
@@ -29,6 +29,32 @@ async function editBook(id: string) {
   }
 }
 
+/** Only empty books can be deleted, so nothing is ever lost by accident. */
+function deleteBookButton(id: string, name: string) {
+  const n = bookFileCount(id);
+  const b = h(
+    'button',
+    {
+      class: 'btn btn-small btn-quiet-danger',
+      disabled: n > 0,
+      title: n ? `Only empty books can be deleted. Move or delete its ${n} ${n === 1 ? 'file' : 'files'} first.` : 'Delete this empty book',
+    },
+    icon('trash'),
+    'Delete book',
+  );
+  b.addEventListener('click', async () => {
+    if (!(await confirmDialog(`Delete the empty book "${name}"? Its folder goes to your Google Drive trash, where you can restore it.`, 'Delete', true))) return;
+    try {
+      await deleteBook(id);
+      toast('Book deleted');
+      go('/books');
+    } catch (err) {
+      toast(errorText(err), 'error');
+    }
+  });
+  return b;
+}
+
 export function bookView(id: string): View {
   const index = getIndex()!;
   const book = index.folders[id];
@@ -53,6 +79,7 @@ export function bookView(id: string): View {
         h('h1', null, book.name),
         h('span', { class: 'count' }, String(docs.length)),
         h('button', { class: 'btn btn-small push', onclick: () => editBook(id) }, 'Edit book'),
+        deleteBookButton(id, book.name),
         h('a', { class: 'btn btn-small', href: `#/new-doc/${id}` }, icon('plus'), 'New document'),
       ),
       docs.length ? h('div', { class: 'rows' }, docs.map((f) => docRow(f))) : empty('This book is empty.', 'Add a document, or drop Markdown files into its folder in Drive.'),

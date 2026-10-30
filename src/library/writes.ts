@@ -5,7 +5,7 @@ import { parseDoc, serializeDoc } from '../md/frontmatter';
 import { findUrls, linkify, urlKey, type LinkifyContext } from '../md/linkify';
 import { allBlocks, blockById, blockIdTaken, usedIn, type BlockRef } from './derived';
 import { BLOCKS_FOLDER, COLLECTION_FILE, MEDIA_FOLDER } from './layout';
-import { applyLocalRemove, applyLocalWrite, COLOR_PROPERTY, ensureTopFolder, getIndex, registerFolder } from './library';
+import { applyLocalRemove, applyLocalRemoveFolder, applyLocalWrite, COLOR_PROPERTY, ensureTopFolder, getIndex, registerFolder } from './library';
 import type { BlockEntry, FileEntry } from './model';
 
 export class ConflictError extends Error {
@@ -52,6 +52,20 @@ export async function updateBook(id: string, name: string, color: string): Promi
   const current = getIndex()!.folders[id];
   const clean = bookName(name, id);
   registerFolder(await drive.updateFolder(id, { ...(clean !== current?.name ? { name: clean } : {}), ...colorExtra(color) }));
+}
+
+/** Files in a book, also in sub-folders made in Drive. */
+export const bookFileCount = (id: string) => Object.values(getIndex()!.files).filter((f) => f.book === id).length;
+
+/** Move an empty book's folder to the Drive trash. Books with files are refused. */
+export async function deleteBook(id: string): Promise<void> {
+  const idx = getIndex()!;
+  const book = idx.folders[id];
+  if (!book || book.parent !== idx.rootId) throw new Error('That is not a book in this library.');
+  const n = bookFileCount(id);
+  if (n) throw new Error(`This book still has ${n} ${n === 1 ? 'file' : 'files'}. Move or delete ${n === 1 ? 'it' : 'them'} first.`);
+  await drive.trash(id);
+  applyLocalRemoveFolder(id);
 }
 
 export async function createBook(name: string, color?: string): Promise<string> {

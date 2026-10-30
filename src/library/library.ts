@@ -318,6 +318,15 @@ export function applyLocalRemove(id: string) {
   persistSoon();
 }
 
+/** Drop a folder (and anything under it) the app itself just trashed. */
+export function applyLocalRemoveFolder(id: string) {
+  const idx = index!;
+  removeFolderTree(id);
+  derive(idx);
+  emit();
+  persistSoon();
+}
+
 export function registerFolder(f: DriveFile) {
   index!.folders[f.id] = folderEntry(f, f.parents?.[0] ?? index!.rootId);
   emit();
