@@ -71,20 +71,17 @@ export const googleDrive: DriveBackend = {
     return res.json();
   },
 
+  // Resumable upload: a simple (multipart) upload stops at 5 MB, attachments can be bigger.
   async createBlob(parentId, name, blob) {
-    const boundary = `viedex${crypto.randomUUID()}`;
-    const meta = JSON.stringify({ name, parents: [safeId(parentId)] });
     const type = blob.type || 'application/octet-stream';
-    const body = new Blob([
-      `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${meta}\r\n--${boundary}\r\nContent-Type: ${type}\r\n\r\n`,
-      blob,
-      `\r\n--${boundary}--`,
-    ]);
-    const res = await driveFetch(`${UPLOAD}/files?uploadType=multipart&fields=${FIELDS}`, {
+    const start = await driveFetch(`${UPLOAD}/files?uploadType=resumable&fields=${FIELDS}`, {
       method: 'POST',
-      headers: { 'Content-Type': `multipart/related; boundary=${boundary}` },
-      body,
+      headers: { 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': type, 'X-Upload-Content-Length': String(blob.size) },
+      body: JSON.stringify({ name, parents: [safeId(parentId)] }),
     });
+    const session = start.headers.get('Location');
+    if (!session) throw new Error('Drive did not start the upload.');
+    const res = await driveFetch(session, { method: 'PUT', headers: { 'Content-Type': type }, body: blob });
     return res.json();
   },
 

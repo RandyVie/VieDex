@@ -26,7 +26,8 @@ export function topFolder(folderId: string, ctx: IndexContext): Folder | null {
 function kindOf(f: Pick<DriveFile, 'name' | 'mimeType'>, top: Folder | null): FileKind {
   const isDoc = DOC_EXT.has(extOf(f.name)) || f.mimeType === 'text/markdown';
   if (top?.name === BLOCKS_FOLDER) return isDoc ? 'collection' : 'other';
-  if (top?.name === MEDIA_FOLDER) return f.mimeType.startsWith('image/') ? 'media' : 'other';
+  // Everything in _media is an attachment: images for image blocks, any other file for file blocks.
+  if (top?.name === MEDIA_FOLDER) return 'media';
   if (top && isReserved(top.name)) return 'other';
   return isDoc ? 'document' : 'other';
 }

@@ -5,6 +5,7 @@ import { sanitizeToString } from '../../md/sanitize';
 import { docBadge, empty, loading, placeOf } from '../components';
 import { clear, formatDate, h, icon } from '../dom';
 import { errorText, toast } from '../feedback';
+import { fileCard } from '../file-card';
 import { mediaImage } from '../media';
 import type { View } from './view';
 
@@ -18,7 +19,9 @@ export function fileView(id: string): View {
   const body = h('div', { class: 'item-body' }, loading());
   const users = Object.values(index.files).filter((x) => x.media.some((m) => m.toLowerCase() === f.name.toLowerCase()));
 
-  if (f.kind === 'media') {
+  if (f.kind === 'media' && !f.mimeType.startsWith('image/')) {
+    clear(body, fileCard(f.id));
+  } else if (f.kind === 'media') {
     clear(body, h('figure', { class: 'image-full' }, mediaImage(f.id, f.name, 1600)));
   } else if (isHtml(f)) {
     // Archived pages are untrusted: sanitized, and shown in a sandbox with scripts off.
@@ -70,7 +73,7 @@ export function fileView(id: string): View {
             h('h2', null, 'Shown in', h('span', { class: 'count' }, String(users.length))),
             users.length
               ? h('ul', { class: 'side-list' }, users.map((u) => h('li', null, h('a', { href: placeOf(u.id).href }, docBadge(), h('span', null, placeOf(u.id).label)))))
-              : h('p', { class: 'muted' }, 'No image block uses this file yet.'),
+              : h('p', { class: 'muted' }, 'No block uses this file yet.'),
           ),
         ),
     ),

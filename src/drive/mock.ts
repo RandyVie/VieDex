@@ -166,6 +166,11 @@ export function debounce<T extends (...args: never[]) => void>(fn: T, ms = 200) 
 \`\`\`
 :::
 `],
+  ['Design library', '_blocks', 'files.md', `:::file ^fl0pd Signed brief
+![[Client brief.pdf]]
+Signed version from the client.
+:::
+`],
   ['Work notes', 'Meetings', 'Kickoff.md', `---
 title: Kickoff
 tags: [meeting]
@@ -235,6 +240,7 @@ export function createMockDrive(): DriveBackend & Record<string, unknown> {
   const media = folderPath('_media', libs.get('Design library')!);
   for (const [name, content] of IMAGES) add(media, name, 'image/svg+xml', content);
   add(libs.get('Design library')!, 'Scan of receipt.pdf', 'application/pdf', '%PDF');
+  add(media, 'Client brief.pdf', 'application/pdf', '%PDF-1.4 demo brief');
 
   const get = (id: string) => {
     const n = nodes.get(id);

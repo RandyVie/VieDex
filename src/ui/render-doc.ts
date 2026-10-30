@@ -4,11 +4,13 @@ import { plainText } from '../library/search';
 import { renderMarkdown } from '../md/render';
 import { blockById, lookupLink, mediaByName, usedIn } from '../library/derived';
 import { BLOCK_LABEL } from '../library/layout';
+import { getIndex } from '../library/library';
 import type { FileEntry } from '../library/model';
 import { confirmDeleteBlock } from './actions';
 import { placeLink } from './components';
 import { h, icon } from './dom';
 import { toast } from './feedback';
+import { fileCard } from './file-card';
 import { mediaImage } from './media';
 import { go } from './router';
 import { ui } from './ui-state';
@@ -45,7 +47,9 @@ function markdown(text: string, ctx: RenderContext) {
 
 function mediaFigure(name: string) {
   const id = mediaByName(name);
-  if (!id) return h('div', { class: 'missing' }, `Image not found in _media: ${name}`);
+  if (!id) return h('div', { class: 'missing' }, `File not found in _media: ${name}`);
+  // Images show as images; any other attachment as a file card.
+  if (!getIndex()?.files[id]?.mimeType.startsWith('image/')) return fileCard(id);
   return h('figure', { class: 'media' }, h('a', { href: `#/file/${id}` }, mediaImage(id, name)));
 }
 
@@ -139,7 +143,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
         : h('span', { class: `block-title${site ? ' is-site' : ''}` }, title)
       : h('span', { class: 'block-title' }),
     // Code has its own copy button on the code box itself.
-    b.type !== 'image' && b.type !== 'code' && b.content.trim() && copyButton(b),
+    b.type !== 'image' && b.type !== 'code' && b.type !== 'file' && b.content.trim() && copyButton(b),
     opts.usage && b.id && !b.id.startsWith('~') && deleteButton(b.id),
   );
 
@@ -147,7 +151,7 @@ export function blockCard(b: CardBlock, opts: CardOptions = {}, ctx: RenderConte
   const text = url ? linkNote(b.content, url) : b.content;
   const body = !text.trim()
     ? null
-    : opts.compact && b.type !== 'image' && b.type !== 'code'
+    : opts.compact && b.type !== 'image' && b.type !== 'code' && b.type !== 'file'
       ? h('div', { class: 'block-body' }, h('p', { class: 'block-clip' }, plainText(text).slice(0, 220)))
       : h('div', { class: 'block-body' }, renderSegments(parseBody(text), { file: ctx.file, depth: ctx.depth + 1 }));
 

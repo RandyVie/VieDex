@@ -4,6 +4,7 @@ import { mediaByName } from '../library/derived';
 import { firstUrl, mediaRefs, type BlockType } from '../md/blocks';
 import { detectLanguage, LANGUAGES, languageLabel } from '../md/detect-lang';
 import { clear, h, icon } from './dom';
+import { fileCard } from './file-card';
 import { mediaImage } from './media';
 import { pickMedia } from './pickers';
 import { richField } from './rich';
@@ -74,6 +75,42 @@ export function blockFields(type: BlockType, content: string, onChange: () => vo
       el: h('div', { class: 'fields' }, preview, caption.el),
       value: () => [name && `![[${name}]]`, caption.value().trim()].filter(Boolean).join('\n'),
       focus: () => caption.focus(),
+    };
+  }
+
+  if (type === 'file') {
+    let name = mediaRefs(content)[0] ?? '';
+    const note = textField(
+      content
+        .split('\n')
+        .filter((l) => !MEDIA_LINE_RE.test(l))
+        .join('\n')
+        .trim(),
+      'Note (optional)',
+      onChange,
+    );
+    const slot = h('div', { class: 'field-file' });
+    const choose = async () => {
+      const picked = await pickMedia('file');
+      if (!picked) return;
+      name = picked;
+      show();
+      onChange();
+    };
+    const show = () => {
+      const id = name ? mediaByName(name) : null;
+      clear(
+        slot,
+        id
+          ? [fileCard(id), h('button', { class: 'btn btn-small', type: 'button', onclick: choose }, 'Change file')]
+          : h('button', { class: 'field-image-empty', type: 'button', onclick: choose }, icon('plus'), name ? `Missing: ${name}. Choose another file` : 'Choose or upload a file'),
+      );
+    };
+    show();
+    return {
+      el: h('div', { class: 'fields' }, slot, note.el),
+      value: () => [name && `![[${name}]]`, note.value().trim()].filter(Boolean).join('\n'),
+      focus: () => note.focus(),
     };
   }
 

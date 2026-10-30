@@ -26,6 +26,7 @@
   --b-link: #5ce0c6;
   --b-code: #ff8fb1;
   --b-image: #c8f560;
+  --b-file: #e8a87c;
   --b-doc: #a4a8b0;
 
   /* Text colors from the editor. Chosen to read well on the dark background. */
@@ -707,7 +708,8 @@ kbd {
 .badge-link, .block-link, .swatch-link, .dot-link { --tc: var(--b-link); }
 .badge-code, .block-code, .swatch-code, .dot-code { --tc: var(--b-code); }
 .badge-image, .block-image, .swatch-image, .dot-image { --tc: var(--b-image); }
-.badge-doc, .badge-file { --tc: var(--b-doc); }
+.badge-file, .block-file, .swatch-file, .dot-file { --tc: var(--b-file); }
+.badge-doc { --tc: var(--b-doc); }
 .badge-warn { --tc: var(--warn); }
 
 .tags {
@@ -3351,6 +3353,105 @@ a.block-title:hover {
 .suggest-value {
   font: 11px var(--mono);
   color: var(--text-3);
+}
+
+/* --- File attachments ----------------------------------------------------------- */
+
+.file-card {
+  margin: 0 0 1em;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.file-preview {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: top;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.file-ext {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 52px;
+  flex: none;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--b-file) 16%, var(--bg-raised));
+  color: var(--b-file);
+  font: 700 11px var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.file-info {
+  display: grid;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+  overflow-wrap: normal;
+}
+
+.file-meta {
+  font: 12px var(--mono);
+  color: var(--text-3);
+}
+
+.file-actions {
+  display: flex;
+  gap: 6px;
+  flex: none;
+}
+
+@media (max-width: 520px) {
+  .file-row {
+    flex-wrap: wrap;
+  }
+
+  .file-actions {
+    width: 100%;
+  }
+}
+
+.pick-file {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--b-file) 12%, var(--bg-active));
+  color: var(--b-file);
+  font: 700 16px var(--mono);
+}
+
+.field-file {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+
+.field-file .file-card {
+  width: 100%;
+  margin: 0;
 }
 
 /* --- Responsive ------------------------------------------------------------ */

@@ -13,6 +13,7 @@ export const COLLECTION_FILE: Record<BlockType, string> = {
   link: 'links.md',
   code: 'code.md',
   image: 'images.md',
+  file: 'files.md',
 };
 
 export const BLOCK_LABEL: Record<BlockType, { one: string; many: string }> = {
@@ -21,4 +22,5 @@ export const BLOCK_LABEL: Record<BlockType, { one: string; many: string }> = {
   link: { one: 'Link', many: 'Links' },
   code: { one: 'Code', many: 'Code' },
   image: { one: 'Image', many: 'Images' },
+  file: { one: 'File', many: 'Files' },
 };

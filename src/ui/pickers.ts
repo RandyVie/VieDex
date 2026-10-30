@@ -4,6 +4,7 @@ import { getIndex } from '../library/library';
 import type { FileEntry } from '../library/model';
 import { searchAll } from '../library/search';
 import { uploadMedia } from '../library/writes';
+import { extOf } from '../library/classify';
 import { blockBadge, placeOf } from './components';
 import { clear, h, icon } from './dom';
 import { errorText, toast } from './feedback';
@@ -75,22 +76,32 @@ export function pickBlock(): Promise<string | null> {
 }
 
 /** Pick an image from `_media`, or upload a new one there. Resolves to the file name. */
-export function pickMedia(): Promise<string | null> {
-  return modal<string>('Choose an image', (done) => {
+export function pickMedia(kind: 'image' | 'file' = 'image'): Promise<string | null> {
+  const images = kind === 'image';
+  return modal<string>(images ? 'Choose an image' : 'Choose a file', (done) => {
     const grid = h('div', { class: 'pick-grid' });
     const render = () => {
       const media = Object.values(getIndex()!.files)
-        .filter((f): f is FileEntry => f.kind === 'media')
+        .filter((f): f is FileEntry => f.kind === 'media' && (!images || f.mimeType.startsWith('image/')))
         .sort((a, b) => b.modifiedTime.localeCompare(a.modifiedTime));
       clear(
         grid,
         media.length
-          ? media.map((f) => h('button', { class: 'pick-tile', onclick: () => done(f.name), title: f.name }, mediaImage(f.id, f.name, 320), h('span', null, f.name)))
-          : h('p', { class: 'muted pick-empty' }, 'No images in _media yet. Upload one.'),
+          ? media.map((f) =>
+              h(
+                'button',
+                { class: 'pick-tile', onclick: () => done(f.name), title: f.name },
+                // Only images get a picture here; other files a type tile, never a download.
+                f.mimeType.startsWith('image/') ? mediaImage(f.id, f.name, 320) : h('span', { class: 'pick-file' }, (extOf(f.name) || 'file').toUpperCase().slice(0, 4)),
+                h('span', null, f.name),
+              ),
+            )
+          : h('p', { class: 'muted pick-empty' }, images ? 'No images in _media yet. Upload one.' : 'No files in _media yet. Upload one.'),
       );
     };
-    const file = h('input', { type: 'file', accept: 'image/*', hidden: true });
-    const upload = h('button', { class: 'btn btn-primary' }, icon('plus'), 'Upload image');
+    const file = h('input', { type: 'file', accept: images ? 'image/*' : null, hidden: true });
+    const upLabel = images ? 'Upload image' : 'Upload file';
+    const upload = h('button', { class: 'btn btn-primary' }, icon('plus'), upLabel);
     upload.addEventListener('click', () => file.click());
     file.addEventListener('change', async () => {
       const chosen = file.files?.[0];
@@ -104,7 +115,7 @@ export function pickMedia(): Promise<string | null> {
       } catch (err) {
         toast(errorText(err), 'error');
         upload.disabled = false;
-        upload.textContent = 'Upload image';
+        upload.textContent = upLabel;
       }
     });
     render();

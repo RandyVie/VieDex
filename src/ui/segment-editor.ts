@@ -283,8 +283,8 @@ export function segmentEditor(body: string, docId: string | null, onDirty: () =>
           onclick: async () => {
             menu.hidden = true;
             let content = '';
-            if (type === 'image') {
-              const name = await pickMedia();
+            if (type === 'image' || type === 'file') {
+              const name = await pickMedia(type);
               if (!name) return;
               content = `![[${name}]]`;
             }

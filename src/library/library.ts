@@ -121,8 +121,8 @@ export async function openLibrary(rootId: string): Promise<void> {
     setStatus('syncing', 'Opening library');
     await ensureSystem(rootId);
     const [savedIndex, savedState] = await Promise.all([readJson<KbIndex>(sys.indexId), readJson<KbState>(sys.stateId)]);
-    state = savedState?.version === 4 && savedState.rootId === rootId ? savedState : { version: 4, rootId, pageToken: null, lastSync: null };
-    if (savedIndex?.version === 4 && savedIndex.rootId === rootId) {
+    state = savedState?.version === 5 && savedState.rootId === rootId ? savedState : { version: 5, rootId, pageToken: null, lastSync: null };
+    if (savedIndex?.version === 5 && savedIndex.rootId === rootId) {
       index = savedIndex;
       derive(index);
       registerGuard();
@@ -184,7 +184,7 @@ async function rebuildIndex(rootId: string) {
   const prev = index;
   const folders: Record<string, Folder> = {};
   const files = await walk(rootId, folders);
-  const next: KbIndex = { version: 4, rootId, builtAt: new Date().toISOString(), folders, files: {} };
+  const next: KbIndex = { version: 5, rootId, builtAt: new Date().toISOString(), folders, files: {} };
   const c: IndexContext = { rootId, folders };
 
   let done = 0;
@@ -199,7 +199,7 @@ async function rebuildIndex(rootId: string) {
   if (mine !== generation) return;
   derive(next);
   index = next;
-  state = { version: 4, rootId, pageToken: token, lastSync: new Date().toISOString() };
+  state = { version: 5, rootId, pageToken: token, lastSync: new Date().toISOString() };
   registerGuard();
   await persist(true);
   emit();

@@ -48,7 +48,7 @@ export interface Folder {
 
 /** Disposable: always rebuildable from the files in Drive. */
 export interface KbIndex {
-  version: 4;
+  version: 5;
   rootId: string;
   builtAt: string;
   folders: Record<string, Folder>;
@@ -56,7 +56,7 @@ export interface KbIndex {
 }
 
 export interface KbState {
-  version: 4;
+  version: 5;
   rootId: string;
   pageToken: string | null;
   lastSync: string | null;

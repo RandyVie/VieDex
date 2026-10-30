@@ -10,7 +10,7 @@ A single-user web app (PWA) for writing and collecting knowledge, organized like
 - **Library**: the top level, like an Obsidian vault. There can be several. Libraries never reference each other.
 - **Book**: a collection of documents inside a library. Books do not nest.
 - **Document**: a Markdown (or plain text) file inside a book. Documents are the main way to read the library.
-- **Block**: a marked section of a document with a type: `note`, `list`, `link`, `code` or `image`.
+- **Block**: a marked section of a document with a type: `note`, `list`, `link`, `code`, `image` or `file`.
   Blocks can also be created on their own, outside any document. Each block type has its own browsable collection.
 
 Accessible from desktop and phone. One copy of the data, living in Google Drive.
@@ -61,8 +61,8 @@ My library/              library root (ID stored in the app's library list)
     index.json           search/block/link index, rebuildable at any time
     state.json           last sync token
   _blocks/               standalone blocks, one file per type
-    notes.md  lists.md  links.md  code.md  images.md
-  _media/                image files used by image blocks
+    notes.md  lists.md  links.md  code.md  images.md  files.md
+  _media/                images and attached files used by image and file blocks
   Typography/            a book (any top-level folder not starting with _)
     Measure.md           a document
   Rebrand 2026/
@@ -108,7 +108,7 @@ Caption for the image.
 - The earlier types `idea` and `reference` were merged into `note`. Files that still say `:::idea` or `:::reference` are read as notes and rewritten as `:::note` when the app saves them. Old `ideas.md` / `references.md` collection files keep working.
 - `^id` is a short ID, unique within the library. The app adds IDs to blocks that lack one when it saves a file.
 - **One source.** Every block lives in exactly one file: the document it was written in, or its `_blocks/` collection file when created on its own. `![[^id]]` on its own line shows a block from elsewhere. The app writes it as `![[^id|Block title]]` so the raw file reads well; only the ID counts, the label is refreshed on every save. Editing an embedded block edits its source.
-- `![[file name.png]]` inside an image block shows a file from `_media/`.
+- `![[file name.png]]` inside an image or file block shows a file from `_media/`: an image, or a file card (preview, size, Open in Drive, Download) for any other file. Uploads use Drive's resumable upload, so there is no 5 MB limit.
 - A code block stores its language after the fence (```` ```css ````). While the language is empty the editor guesses it from the code with plain rules (`src/md/detect-lang.ts`); a language picked or typed by hand is never overwritten.
 - Each block type has a collection view listing every block of that type in the library. Each block shows where it lives and every document (and book) that uses it.
 

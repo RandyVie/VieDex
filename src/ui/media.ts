@@ -34,3 +34,20 @@ export function mediaImage(fileId: string, alt: string, px = 1200): HTMLElement 
   links().then((m) => box.replaceWith(thumb(fileId, m.get(fileId), px, alt)));
   return box;
 }
+
+/**
+ * Drive's preview image of any file (first page of a PDF, a document, a video frame), or nothing.
+ * Never falls back to downloading the file itself, which could be large.
+ */
+export function previewOnly(fileId: string, alt: string, px = 640): HTMLElement {
+  const box = h('span', { class: 'preview-slot' });
+  links().then((m) => {
+    const link = m.get(fileId);
+    if (!link) return box.remove();
+    const img = h('img', { alt, loading: 'lazy', decoding: 'async', referrerpolicy: 'no-referrer', class: 'file-preview' });
+    img.addEventListener('error', () => img.remove());
+    img.src = /=s\d+(-[a-z]+)?$/.test(link) ? link.replace(/=s\d+(-[a-z]+)?$/, `=s${px}`) : link;
+    box.replaceWith(img);
+  });
+  return box;
+}

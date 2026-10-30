@@ -6,7 +6,7 @@
 //
 // and `![[^b7f3]]` on its own line shows a block that lives elsewhere.
 
-export const BLOCK_TYPES = ['note', 'list', 'link', 'code', 'image'] as const;
+export const BLOCK_TYPES = ['note', 'list', 'link', 'code', 'image', 'file'] as const;
 
 /** Types that existed before and are read as notes. The app writes them back as `:::note`. */
 const LEGACY_TYPES: Record<string, BlockType> = { idea: 'note', reference: 'note' };
@@ -132,7 +132,7 @@ export function displayTitle(b: Pick<ParsedBlock, 'title' | 'content' | 'type'>)
     .replace(/[*_`]/g, '')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
   if (clean) return clean.length > 90 ? `${clean.slice(0, 88)}…` : clean;
-  if (b.type === 'image') return mediaRefs(b.content)[0] ?? 'Image';
+  if (b.type === 'image' || b.type === 'file') return mediaRefs(b.content)[0] ?? (b.type === 'image' ? 'Image' : 'File');
   return `Untitled ${b.type}`;
 }
 
